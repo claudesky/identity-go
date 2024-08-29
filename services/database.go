@@ -20,7 +20,8 @@ var (
 func NewDatabase(ctx context.Context, cstr string) (*Database, error) {
 	var err error
 	once.Do(func() {
-		conf, err := pgxpool.ParseConfig(cstr)
+		var conf *pgxpool.Config
+		conf, err = pgxpool.ParseConfig(cstr)
 		if err != nil {
 			return
 		}
@@ -31,7 +32,8 @@ func NewDatabase(ctx context.Context, cstr string) (*Database, error) {
 		// 	return nil
 		// }
 
-		pool, err := pgxpool.NewWithConfig(ctx, conf)
+		var pool *pgxpool.Pool
+		pool, err = pgxpool.NewWithConfig(ctx, conf)
 		if err != nil {
 			return
 		}
