@@ -124,7 +124,7 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save the token family here
+	// TODO: Save the token family here
 
 	json.NewEncoder(w).Encode(&TokenResponse{
 		AccessToken:  tokenString,
