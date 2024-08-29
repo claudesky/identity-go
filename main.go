@@ -1,23 +1,21 @@
 package main
 
 import (
-	"encoding/json"
+	"crypto"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
+	"os"
 
+	"github.com/claudesky/identity-go/controllers"
+	"github.com/claudesky/identity-go/services"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var addr = flag.String("addr", ":9102", "Http Service Address")
 var privKey = flag.String("privKey", "./keys/private.pem", "Private Key")
 var pubKey = flag.String("pubKey", "./keys/public.pem", "Public Key")
-
-type Message struct {
-	Message string `json:"message"`
-}
 
 func main() {
 	flag.Parse()
@@ -34,72 +32,55 @@ func main() {
 		return
 	}
 
-	tokenHandler := newTokenHandler(pkey, pubkey)
+	tokenHandler := services.NewTokenHandler(pkey, pubkey)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			httpHandler(tokenHandler, w, r)
-		}))
 
-	log.Fatal((http.ListenAndServe(*addr, mux)))
-}
+	healthController := controllers.HealthController{Healthy: true}
+	healthController.RegisterRoutes(mux)
 
-func httpHandler(
-	th *TokenHandler,
-	w http.ResponseWriter,
-	r *http.Request,
-) {
-	switch r.URL.Path {
-	case "/hello-world":
-		helloWorld(w, r)
-	case "/healthcheck":
-		health(w, r)
-	case "/auth/login":
-		authLogin(th, w, r)
-	case "/auth/validate":
-		authValidate(th, w, r)
-	default:
-		http.Error(w, "Not Found.", http.StatusNotFound)
+	authController := controllers.AuthController{
+		TokenHandler: tokenHandler,
 	}
-}
+	authController.RegisterRoutes(mux)
 
-func health(w http.ResponseWriter, _ *http.Request) {
-	json.NewEncoder(w).Encode(&Message{Message: "ok"})
-}
-
-func helloWorld(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprint(w, "Hello, world!")
-}
-
-func authLogin(th *TokenHandler, w http.ResponseWriter, _ *http.Request) {
-	// TODO: Login Stuff here
-
-	// Assume OK
-	tokenString, err := signToken(th, jwt.MapClaims{
-		"jti": "123",
-		"jtf": "familyId",
-		"jtp": "parendId",
-		"sub": "subject",
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Not Found", http.StatusNotFound)
 	})
+
+	log.Fatal(http.ListenAndServe(*addr, mux))
+}
+
+func fetchPkey() (crypto.PrivateKey, error) {
+	// Get the Private Key
+	pkeyBytes, err := os.ReadFile(*privKey)
 	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
-	json.NewEncoder(w).Encode(&Message{Message: tokenString})
+	pkey, err := jwt.ParseEdPrivateKeyFromPEM(pkeyBytes)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return pkey, nil
 }
 
-func authValidate(th *TokenHandler, w http.ResponseWriter, r *http.Request) {
-	tokenString := strings.Split(r.Header.Get("Authorization"), "Bearer ")[1]
-
-	token, err := verifyToken(th, tokenString)
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		json.NewEncoder(w).Encode(claims)
-	} else {
+func fetchPubkey() (crypto.PublicKey, error) {
+	// Get the Public Key
+	pubkeyBytes, err := os.ReadFile(*pubKey)
+	if err != nil {
 		fmt.Println(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return nil, err
 	}
+
+	pubkey, err := jwt.ParseEdPublicKeyFromPEM(pubkeyBytes)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return pubkey, nil
 }
