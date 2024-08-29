@@ -97,7 +97,7 @@ func authValidate(th *TokenHandler, w http.ResponseWriter, r *http.Request) {
 	token, err := verifyToken(th, tokenString)
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		json.NewEncoder(w).Encode(&Message{Message: fmt.Sprint(claims)})
+		json.NewEncoder(w).Encode(claims)
 	} else {
 		fmt.Println(err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
