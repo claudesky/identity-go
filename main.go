@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -20,6 +21,12 @@ var pubKey = flag.String("pubKey", "./keys/public.pem", "Public Key")
 func main() {
 	flag.Parse()
 
+	// Configure structured logging
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	slog.SetDefault(logger)
+
+	// Fetch keys
 	pkey, err := fetchPkey()
 	if err != nil {
 		log.Fatal(err)
@@ -32,8 +39,10 @@ func main() {
 		return
 	}
 
+	// Init Services
 	tokenHandler := services.NewTokenHandler(pkey, pubkey)
 
+	// Init Controllers
 	mux := http.NewServeMux()
 
 	healthController := controllers.HealthController{Healthy: true}
@@ -44,10 +53,13 @@ func main() {
 	}
 	authController.RegisterRoutes(mux)
 
+	// Fallback Route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 	})
 
+	// Start Server
+	slog.Info("server init")
 	log.Fatal(http.ListenAndServe(*addr, mux))
 }
 
