@@ -71,13 +71,7 @@ func fetchPkey() (crypto.PrivateKey, error) {
 		return nil, err
 	}
 
-	pkey, err := jwt.ParseEdPrivateKeyFromPEM(pkeyBytes)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	return pkey, nil
+	return jwt.ParseEdPrivateKeyFromPEM(pkeyBytes)
 }
 
 func fetchPubkey() (crypto.PublicKey, error) {
@@ -88,11 +82,5 @@ func fetchPubkey() (crypto.PublicKey, error) {
 		return nil, err
 	}
 
-	pubkey, err := jwt.ParseEdPublicKeyFromPEM(pubkeyBytes)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	return pubkey, nil
+	return jwt.ParseEdPublicKeyFromPEM(pubkeyBytes)
 }
