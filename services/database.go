@@ -17,13 +17,17 @@ var (
 	once sync.Once
 )
 
-func NewDatabase(ctx context.Context, cstr string) (*Database, error) {
+func NewDatabase(ctx context.Context, cstr string, pass *string) (*Database, error) {
 	var err error
 	once.Do(func() {
 		var conf *pgxpool.Config
 		conf, err = pgxpool.ParseConfig(cstr)
 		if err != nil {
 			return
+		}
+
+		if pass != nil {
+			conf.ConnConfig.Password = *pass
 		}
 
 		// // Possibly use this later? try string for now

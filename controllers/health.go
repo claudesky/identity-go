@@ -10,7 +10,11 @@ type Message struct {
 }
 
 type HealthController struct {
-	Healthy bool
+	healthy bool
+}
+
+func NewHealthController() *HealthController {
+	return &HealthController{healthy: true}
 }
 
 func (c *HealthController) RegisterRoutes(mux *http.ServeMux) {
@@ -19,7 +23,7 @@ func (c *HealthController) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (c *HealthController) check(w http.ResponseWriter, _ *http.Request) {
-	if c.Healthy {
+	if c.healthy {
 		json.NewEncoder(w).Encode(&Message{Message: "ok"})
 	} else {
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
@@ -27,7 +31,7 @@ func (c *HealthController) check(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (c *HealthController) helloWorld(w http.ResponseWriter, _ *http.Request) {
-	if c.Healthy {
+	if c.healthy {
 		json.NewEncoder(w).Encode(&Message{Message: "Hello, world!"})
 	} else {
 		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)

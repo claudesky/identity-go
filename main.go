@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os"
 
 	"github.com/claudesky/identity-go/controllers"
+	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -17,40 +19,50 @@ import (
 var addr = flag.String("addr", ":9102", "Http Service Address")
 var privKey = flag.String("privKey", "./keys/private.pem", "Private Key")
 var pubKey = flag.String("pubKey", "./keys/public.pem", "Public Key")
+var dbConn = flag.String(
+	"dbConn",
+	"postgresql://postgres@localhost/identity_go",
+	"Database Connection String")
+var dbPass = flag.String("dbPass", "password", "Database Password")
 
 func main() {
 	flag.Parse()
 
 	// Configure structured logging
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
 	slog.SetDefault(logger)
 
 	// Fetch keys
 	pkey, err := fetchPkey()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
-
 	pubkey, err := fetchPubkey()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	// Init Services
 	tokenHandler := services.NewTokenHandler(pkey, pubkey)
+	database, err := services.NewDatabase(
+		context.Background(),
+		*dbConn,
+		dbPass,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Init Repositories
+	userRepository := repositories.NewUserRepository(database)
 
 	// Init Controllers
 	mux := http.NewServeMux()
 
-	healthController := controllers.HealthController{Healthy: true}
+	healthController := controllers.NewHealthController()
 	healthController.RegisterRoutes(mux)
 
-	authController := controllers.AuthController{
-		TokenHandler: tokenHandler,
-	}
+	authController := controllers.NewAuthController(tokenHandler, userRepository)
 	authController.RegisterRoutes(mux)
 
 	// Fallback Route

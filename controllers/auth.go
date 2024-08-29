@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
 	"github.com/golang-jwt/jwt/v5"
@@ -20,7 +21,18 @@ type TokenResponse struct {
 }
 
 type AuthController struct {
-	TokenHandler *services.TokenHandler
+	tokenHandler   *services.TokenHandler
+	userRepository *repositories.UserRepository
+}
+
+func NewAuthController(
+	th *services.TokenHandler,
+	ur *repositories.UserRepository,
+) *AuthController {
+	return &AuthController{
+		tokenHandler:   th,
+		userRepository: ur,
+	}
 }
 
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
@@ -28,8 +40,18 @@ func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /auth/validate", c.validate)
 }
 
-func (c *AuthController) login(w http.ResponseWriter, _ *http.Request) {
-	// TODO: Login Stuff here
+func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
+	email := "admin@example.org"
+	user, err := c.userRepository.GetUserByEmail(r.Context(), email)
+	if err != nil {
+		slog.Info("could not find user by email",
+			slog.String("error", fmt.Sprintf("%v", err)),
+			slog.Group("params",
+				slog.String("email", email),
+			),
+		)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
 
 	// Assume Login Success
 
@@ -40,7 +62,7 @@ func (c *AuthController) login(w http.ResponseWriter, _ *http.Request) {
 	ttlRT := time.Hour * time.Duration(72)
 	ttlAT := time.Minute * time.Duration(5)
 
-	refreshString, err := c.TokenHandler.SignToken(jwt.MapClaims{
+	refreshString, err := c.tokenHandler.SignToken(jwt.MapClaims{
 		"jti": jtf,
 		"jtf": jtf,
 		"exp": time.Now().UTC().Add(ttlRT).Unix(),
@@ -51,11 +73,11 @@ func (c *AuthController) login(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	tokenString, err := c.TokenHandler.SignToken(jwt.MapClaims{
+	tokenString, err := c.tokenHandler.SignToken(jwt.MapClaims{
 		"jti": utils.PseudoUUID(),
 		"jtf": jtf,
 		"jtp": jtf,
-		"sub": "subject",
+		"sub": user.Id,
 		"exp": time.Now().UTC().Add(ttlAT).Unix(),
 	})
 	if err != nil {
@@ -63,6 +85,8 @@ func (c *AuthController) login(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+
+	// Save the token family here
 
 	json.NewEncoder(w).Encode(&TokenResponse{
 		AccessToken:  tokenString,
@@ -73,7 +97,7 @@ func (c *AuthController) login(w http.ResponseWriter, _ *http.Request) {
 func (c *AuthController) validate(w http.ResponseWriter, r *http.Request) {
 	tokenString := strings.Split(r.Header.Get("Authorization"), "Bearer ")[1]
 
-	token, err := c.TokenHandler.VerifyToken(tokenString)
+	token, err := c.tokenHandler.VerifyToken(tokenString)
 	if err != nil {
 		slog.Info("token verification failed", "error", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
