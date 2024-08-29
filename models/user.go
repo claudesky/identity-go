@@ -1,8 +1,13 @@
 package models
 
+import "time"
+
 type User struct {
-	Id       string `db:"id"`
-	Password string `db:"password" json:"-"`
-	Name     string `db:"name"`
-	Email    string `db:"email"`
+	Id                    string
+	Password              *string `json:"-"`
+	Name                  *string
+	Email                 *string
+	EmailVerifiedOn       *time.Time
+	PhoneNumber           *string
+	PhoneNumberVerifiedOn *time.Time
 }
