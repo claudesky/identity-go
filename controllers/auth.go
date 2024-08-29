@@ -13,6 +13,7 @@ import (
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type TokenResponse struct {
@@ -40,20 +41,57 @@ func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /auth/validate", c.validate)
 }
 
+type LoginRequest struct {
+	Email    *string `json:"email"`
+	Password *string `json:"password"`
+}
+
 func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
-	email := "admin@example.org"
-	user, err := c.userRepository.GetUserByEmail(r.Context(), email)
+	var rq LoginRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&rq); err != nil {
+		slog.Warn("could not decode LoginRequest", "error", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Validation
+	if rq.Email == nil {
+		http.Error(w, "[email] is required", http.StatusBadRequest)
+		return
+	}
+
+	if rq.Password == nil {
+		http.Error(w, "[password] is required", http.StatusBadRequest)
+		return
+	}
+
+	user, err := c.userRepository.GetUserByEmail(r.Context(), *rq.Email)
 	if err != nil {
+		// Horrible error handling, should get this handled outside?
 		slog.Info("could not find user by email",
 			slog.String("error", fmt.Sprintf("%v", err)),
 			slog.Group("params",
-				slog.String("email", email),
+				slog.String("email", *rq.Email),
 			),
 		)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
-	// Assume Login Success
+	if user.Password == nil {
+		// Better handling later
+		slog.Warn("user has no password")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Check Password
+	err = bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(*rq.Password))
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	// Token Family ID
 	jtf := utils.PseudoUUID()
