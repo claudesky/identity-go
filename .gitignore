@@ -10,6 +10,7 @@
 # But not these files...
 !/.gitignore
 !docker-compose.yml
+!.env.example
 
 !*.go
 !go.sum
