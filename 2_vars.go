@@ -9,17 +9,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var addr string = ":9102"
-var pkey crypto.PrivateKey
-var pubkey crypto.PublicKey
-var dbConn = "postgresql://postgres@localhost/identity_go"
-var dbPass string
+var idg_port string = ":9102"
+var idg_pkey crypto.PrivateKey
+var idg_pubkey crypto.PublicKey
+var idg_db_conn = "postgresql://postgres@localhost/identity_go"
+var idg_db_pass string
+var idg_mail_user string
+var idg_mail_pass string
+var idg_mail_host string
+var idg_mail_port string
+var idg_mail_addr string
 
 func init() {
 	// PORT
 	v, x := os.LookupEnv("IDG_PORT")
 	if x && v != "" {
-		addr = ":" + v
+		idg_port = ":" + v
 	}
 
 	// PRIVATE KEY
@@ -30,7 +35,7 @@ func init() {
 			panic(err)
 		}
 
-		pkey, err = jwt.ParseEdPrivateKeyFromPEM([]byte(pkeyPem))
+		idg_pkey, err = jwt.ParseEdPrivateKeyFromPEM([]byte(pkeyPem))
 		if err != nil {
 			panic(err)
 		}
@@ -38,13 +43,13 @@ func init() {
 		v, x := os.LookupEnv("IDG_PKEY_PATH")
 		if x && v != "" {
 			var err error
-			pkey, err = fetchPkey(v)
+			idg_pkey, err = fetchPkey(v)
 			if err != nil {
 				panic(err)
 			}
 		} else {
 			var err error
-			pkey, err = fetchPkey("./keys/private.pem") // Default IDG_PKEY_PATH
+			idg_pkey, err = fetchPkey("./keys/private.pem") // Default IDG_PKEY_PATH
 			if err != nil {
 				panic(err)
 			}
@@ -59,7 +64,7 @@ func init() {
 			panic(err)
 		}
 
-		pubkey, err = jwt.ParseEdPrivateKeyFromPEM([]byte(pubkeyPem))
+		idg_pubkey, err = jwt.ParseEdPrivateKeyFromPEM([]byte(pubkeyPem))
 		if err != nil {
 			panic(err)
 		}
@@ -67,13 +72,13 @@ func init() {
 		v, x := os.LookupEnv("IDG_PUBKEY_PATH")
 		if x && v != "" {
 			var err error
-			pubkey, err = fetchPubkey(v)
+			idg_pubkey, err = fetchPubkey(v)
 			if err != nil {
 				panic(err)
 			}
 		} else {
 			var err error
-			pubkey, err = fetchPubkey("./keys/public.pem") // Default IDG_PUBKEY_PATH
+			idg_pubkey, err = fetchPubkey("./keys/public.pem") // Default IDG_PUBKEY_PATH
 			if err != nil {
 				panic(err)
 			}
@@ -83,14 +88,16 @@ func init() {
 	// DB CONNECTION
 	v, x = os.LookupEnv("IDG_DB_CONN")
 	if x && v != "" {
-		dbConn = v
+		idg_db_conn = v
 	}
 
 	// DB PASSWORD
 	v, x = os.LookupEnv("IDG_DB_PASS")
 	if x && v != "" {
-		dbPass = v
+		idg_db_pass = v
 	}
+
+	// MAIL
 
 }
 

@@ -18,11 +18,11 @@ func main() {
 	slog.SetDefault(logger)
 
 	// Init Services
-	tokenHandler := services.NewTokenHandler(pkey, pubkey)
+	tokenHandler := services.NewTokenHandler(idg_pkey, idg_pubkey)
 	database, err := services.NewDatabase(
 		context.Background(),
-		dbConn,
-		&dbPass,
+		idg_db_conn,
+		&idg_db_pass,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -47,5 +47,5 @@ func main() {
 
 	// Start Server
 	slog.Info("server init")
-	log.Fatal(http.ListenAndServe(addr, mux))
+	log.Fatal(http.ListenAndServe(idg_port, mux))
 }
