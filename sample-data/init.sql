@@ -14,11 +14,11 @@ create table audiences (
 );
 
 create table token_families (
-    id uuid,
-    sub uuid,
-    last_issued uuid,
-    created_at timestamp,
-    last_issued_at timestamp
+    id uuid primary key,
+    sub uuid not null,
+    last_issued uuid not null,
+    created_at timestamp not null,
+    last_issued_at timestamp not null
 );
 
 insert into users (id, name, email, password)
