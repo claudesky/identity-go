@@ -1,0 +1,54 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "identity-go",
+    "collectionId": "d626449d-939b-4532-87cb-3500b9e20fef",
+    "dateExported": "2024-08-30T05:36:05.121Z",
+    "version": "1.2",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "cfe6a4b8-4e0c-41f3-944f-979c03492f43",
+            "colId": "d626449d-939b-4532-87cb-3500b9e20fef",
+            "containerId": "",
+            "name": "Login",
+            "url": "{{base_url}}/auth/login",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2024-08-30T05:09:12.529Z",
+            "modified": "2024-08-30T05:34:53.024Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"admin@example.org\",\n  \"password\": \"password\"\n}",
+                "form": []
+            },
+            "postReq": {
+                "inlineScripts": [
+                    {
+                        "script": [
+                            "tc.setVar(\"access_token\", tc.response.json.accessToken);",
+                            "tc.setVar(\"refresh_token\", tc.response.json.refreshToken);"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "_id": "cf48e9f9-84ba-44a9-9517-3934e9288932",
+            "colId": "d626449d-939b-4532-87cb-3500b9e20fef",
+            "containerId": "",
+            "name": "Validate Access Token",
+            "url": "{{base_url}}/auth/validate",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-08-30T05:17:17.703Z",
+            "modified": "2024-08-30T05:18:12.815Z",
+            "headers": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{access_token}}"
+            }
+        }
+    ],
+    "ref": "86ksUQ7we1lGCVa0V3375zLjFiLTnS4hN1OKxx_FI-IqA30Gd2lvairHDjXVSc-RfVSKCkqOyDco9Eyq-QurGg"
+}
