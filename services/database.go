@@ -43,6 +43,8 @@ func NewDatabase(ctx context.Context, cstr string, pass *string) (*Database, err
 		}
 
 		db = &Database{pool}
+
+		err = db.Ping(ctx)
 	})
 
 	return db, err
