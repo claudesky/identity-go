@@ -20,7 +20,7 @@ func (r *UserRepository) GetUserByEmail(
 	ctx context.Context,
 	email string,
 ) (
-	models.User,
+	*models.User,
 	error,
 ) {
 	query := `select * from users where email = @email`
@@ -28,8 +28,9 @@ func (r *UserRepository) GetUserByEmail(
 
 	rows, err := r.db.Query(ctx, query, args)
 	if err != nil {
-		return models.User{}, err
+		return nil, err
 	}
 
-	return pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.User])
+	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.User])
+	return &result, err
 }
