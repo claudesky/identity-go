@@ -80,3 +80,12 @@ func (d *Database) QueryRow(
 	row = d.pool.QueryRow(ctx, sql, args)
 	return
 }
+
+func (d *Database) Exec(
+	ctx context.Context,
+	sql string,
+	args any,
+) error {
+	_, err := d.pool.Exec(ctx, sql, args)
+	return err
+}
