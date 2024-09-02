@@ -30,6 +30,7 @@ func main() {
 
 	// Init Repositories
 	userRepository := repositories.NewUserRepository(database)
+	tokenFamilyRepository := repositories.NewTokenFamilyRepository(database)
 
 	// Init Controllers
 	mux := http.NewServeMux()
@@ -37,7 +38,11 @@ func main() {
 	healthController := controllers.NewHealthController()
 	healthController.RegisterRoutes(mux)
 
-	authController := controllers.NewAuthController(tokenHandler, userRepository)
+	authController := controllers.NewAuthController(
+		tokenHandler,
+		userRepository,
+		tokenFamilyRepository,
+	)
 	authController.RegisterRoutes(mux)
 
 	// Fallback Route

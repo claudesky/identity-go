@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/claudesky/identity-go/models"
 	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
@@ -22,18 +23,17 @@ type TokenResponse struct {
 }
 
 type AuthController struct {
-	tokenHandler   *services.TokenHandler
-	userRepository *repositories.UserRepository
+	th  *services.TokenHandler
+	ur  *repositories.UserRepository
+	tfr *repositories.TokenFamilyRepository
 }
 
 func NewAuthController(
 	th *services.TokenHandler,
 	ur *repositories.UserRepository,
+	tfr *repositories.TokenFamilyRepository,
 ) *AuthController {
-	return &AuthController{
-		tokenHandler:   th,
-		userRepository: ur,
-	}
+	return &AuthController{th, ur, tfr}
 }
 
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
@@ -66,7 +66,7 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.userRepository.GetUserByEmail(r.Context(), *rq.Email)
+	user, err := c.ur.GetUserByEmail(r.Context(), *rq.Email)
 	if err != nil {
 		// Horrible error handling, should get this handled outside?
 		slog.Info("could not find user by email",
@@ -100,7 +100,7 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 	ttlRT := time.Hour * time.Duration(72)
 	ttlAT := time.Minute * time.Duration(5)
 
-	refreshString, err := c.tokenHandler.SignToken(jwt.MapClaims{
+	refreshString, err := c.th.SignToken(jwt.MapClaims{
 		"jti": jtf,
 		"jtf": jtf,
 		"exp": time.Now().UTC().Add(ttlRT).Unix(),
@@ -111,12 +111,12 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString, err := c.tokenHandler.SignToken(jwt.MapClaims{
+	tokenString, err := c.th.SignToken(jwt.MapClaims{
 		"jti": utils.PseudoUUID(),
 		"jtf": jtf,
 		"jtp": jtf,
 		"sub": user.Id,
-		"exp": time.Now().UTC().Add(ttlAT).Unix(),
+		"exp": time.Now().Add(ttlAT).Unix(),
 	})
 	if err != nil {
 		log.Fatalf("access token signing failed: %s", err)
@@ -124,7 +124,13 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Save the token family here
+	c.tfr.InsertToken(r.Context(), &models.TokenFamily{
+		Id:           jtf,
+		Sub:          user.Id,
+		LastIssued:   jtf,
+		CreatedAt:    time.Now().UTC().Local(),
+		LastIssuedAt: time.Now().UTC().Local(),
+	})
 
 	json.NewEncoder(w).Encode(&TokenResponse{
 		AccessToken:  tokenString,
@@ -135,7 +141,7 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 func (c *AuthController) validate(w http.ResponseWriter, r *http.Request) {
 	tokenString := strings.Split(r.Header.Get("Authorization"), "Bearer ")[1]
 
-	token, err := c.tokenHandler.VerifyToken(tokenString)
+	token, err := c.th.VerifyToken(tokenString)
 	if err != nil {
 		slog.Info("token verification failed", "error", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
