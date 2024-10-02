@@ -15,6 +15,7 @@
 !*.go
 !go.sum
 !go.mod
+!keys/
 
 !README.md
 !LICENSE
