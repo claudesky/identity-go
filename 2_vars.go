@@ -9,6 +9,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const defaultPkeyPath = "./keys/private.pem"
+const defaultPubkeyPath = "./keys/public.pem"
+
 var idg_port string = ":9102"
 var idg_pkey crypto.PrivateKey
 var idg_pubkey crypto.PublicKey
@@ -30,6 +33,7 @@ func init() {
 	// PRIVATE KEY
 	v, x = os.LookupEnv("IDG_PKEY_64")
 	if x && v != "" {
+		// Parse private key directly from base64 encoded env
 		pkeyPem, err := base64.StdEncoding.DecodeString(v)
 		if err != nil {
 			panic(err)
@@ -40,6 +44,7 @@ func init() {
 			panic(err)
 		}
 	} else {
+		// Get file contents of path as private key
 		v, x := os.LookupEnv("IDG_PKEY_PATH")
 		if x && v != "" {
 			var err error
@@ -48,8 +53,9 @@ func init() {
 				panic(err)
 			}
 		} else {
+			// Use the default private key path
 			var err error
-			idg_pkey, err = fetchPkey("./keys/private.pem") // Default IDG_PKEY_PATH
+			idg_pkey, err = fetchPkey(defaultPkeyPath)
 			if err != nil {
 				panic(err)
 			}
@@ -59,6 +65,7 @@ func init() {
 	// PUBLIC KEY
 	v, x = os.LookupEnv("IDG_PUBKEY_64")
 	if x && v != "" {
+		// Parse public key directly from base64 encoded env
 		pubkeyPem, err := base64.StdEncoding.DecodeString(v)
 		if err != nil {
 			panic(err)
@@ -69,6 +76,7 @@ func init() {
 			panic(err)
 		}
 	} else {
+		// Get file contents of path as public key
 		v, x := os.LookupEnv("IDG_PUBKEY_PATH")
 		if x && v != "" {
 			var err error
@@ -77,8 +85,9 @@ func init() {
 				panic(err)
 			}
 		} else {
+			// Use the default public key path
 			var err error
-			idg_pubkey, err = fetchPubkey("./keys/public.pem") // Default IDG_PUBKEY_PATH
+			idg_pubkey, err = fetchPubkey(defaultPubkeyPath)
 			if err != nil {
 				panic(err)
 			}
