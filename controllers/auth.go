@@ -103,7 +103,7 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 	refreshString, err := c.th.SignToken(jwt.MapClaims{
 		"jti": jtf,
 		"jtf": jtf,
-		"exp": time.Now().UTC().Add(ttlRT).Unix(),
+		"exp": time.Now().Add(ttlRT).Unix(),
 	})
 	if err != nil {
 		slog.Info("refresh token signing failed", "error", err)
@@ -128,8 +128,8 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 		Id:           jtf,
 		Sub:          user.Id,
 		LastIssued:   jtf,
-		CreatedAt:    time.Now().UTC().Local(),
-		LastIssuedAt: time.Now().UTC().Local(),
+		CreatedAt:    time.Now().UTC(),
+		LastIssuedAt: time.Now().UTC(),
 	})
 
 	json.NewEncoder(w).Encode(&TokenResponse{
