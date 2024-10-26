@@ -45,6 +45,13 @@ func main() {
 	)
 	authController.RegisterRoutes(mux)
 
+	selfController := controllers.NewSelfController(
+		tokenHandler,
+		userRepository,
+		tokenFamilyRepository,
+	)
+	selfController.RegisterRoutes(mux)
+
 	// Fallback Route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
