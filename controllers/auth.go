@@ -47,10 +47,10 @@ type LoginRequest struct {
 }
 
 func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
-	var rq LoginRequest
+	var rq *LoginRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&rq); err != nil {
-		slog.Warn("could not decode LoginRequest", "error", err)
+	rq, err := utils.DecodeRequestJSON[LoginRequest](r)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
