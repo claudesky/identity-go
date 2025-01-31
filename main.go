@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/claudesky/identity-go/controllers"
+	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
 )
@@ -68,5 +69,5 @@ func main() {
 	}
 
 	slog.Info("server init")
-	log.Fatal(http.ListenAndServe(idg_port, mux))
+	log.Fatal(http.ListenAndServe(idg_port, middleware.ContentTypeJson(mux)))
 }
