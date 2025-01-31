@@ -27,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	mail := services.NewMail(idg_mail_user, idg_mail_pass, idg_mail_host, idg_mail_port)
 
 	// Init Repositories
 	userRepository := repositories.NewUserRepository(database)
@@ -58,6 +59,10 @@ func main() {
 	})
 
 	// Start Server
+	if err := mail.SendMailSimple(idg_mail_addr, "admin@example.org", "test", "server init"); err != nil {
+		slog.Warn("Initialization Email Error", "error", err.Error())
+	}
+
 	slog.Info("server init")
 	log.Fatal(http.ListenAndServe(idg_port, mux))
 }

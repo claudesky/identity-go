@@ -23,12 +23,19 @@ var idg_mail_host string
 var idg_mail_port string
 var idg_mail_addr string
 
-func init() {
-	// PORT
-	v, x := os.LookupEnv("IDG_PORT")
-	if x && v != "" {
-		idg_port = ":" + v
+func getEnv(key string, fallback string) string {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		return v
 	}
+	return fallback
+}
+
+func init() {
+	var v string
+	var x bool
+
+	// PORT
+	idg_port = getEnv("IDG_PORT", idg_port)
 
 	// PRIVATE KEY
 	v, x = os.LookupEnv("IDG_PKEY_64")
@@ -95,19 +102,17 @@ func init() {
 	}
 
 	// DB CONNECTION
-	v, x = os.LookupEnv("IDG_DB_CONN")
-	if x && v != "" {
-		idg_db_conn = v
-	}
+	idg_db_conn = getEnv("IDG_DB_CONN", idg_db_conn)
 
 	// DB PASSWORD
-	v, x = os.LookupEnv("IDG_DB_PASS")
-	if x && v != "" {
-		idg_db_pass = v
-	}
+	idg_db_pass = getEnv("IDG_DB_PASS", "")
 
 	// MAIL
-
+	idg_mail_user = getEnv("IDG_MAIL_USER", "")
+	idg_mail_pass = getEnv("IDG_MAIL_PASS", "")
+	idg_mail_host = getEnv("IDG_MAIL_HOST", "")
+	idg_mail_port = getEnv("IDG_MAIL_PORT", "")
+	idg_mail_addr = getEnv("IDG_MAIL_ADDR", "")
 }
 
 func fetchPkey(path string) (crypto.PrivateKey, error) {
