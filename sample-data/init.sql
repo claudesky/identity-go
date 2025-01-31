@@ -26,5 +26,6 @@ values (
     '0615b123-1a98-405b-bc44-6d41ad6a193c',
     'admin',
     'admin@example.org',
+    -- password is "password"
     '$2a$12$xrjwIS2d.hptiD/CEKKqxO5kVYjuWcWwxTNeXDT2bQJRlJweKGLu.'
 )
