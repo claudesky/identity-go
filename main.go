@@ -59,8 +59,12 @@ func main() {
 	})
 
 	// Start Server
-	if err := mail.SendMailSimple(idg_mail_addr, "admin@example.org", "test", "server init"); err != nil {
-		slog.Warn("Initialization Email Error", "error", err.Error())
+
+	// Send Init Email
+	if idg_send_init_email {
+		if err := mail.SendMailSimple(idg_mail_addr, "admin@example.org", "test", "server init"); err != nil {
+			slog.Warn("Initialization Email Error", "error", err.Error())
+		}
 	}
 
 	slog.Info("server init")

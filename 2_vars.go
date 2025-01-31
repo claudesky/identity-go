@@ -22,6 +22,7 @@ var idg_mail_pass string
 var idg_mail_host string
 var idg_mail_port string
 var idg_mail_addr string
+var idg_send_init_email bool
 
 func getEnv(key string, fallback string) string {
 	if v, ok := os.LookupEnv(key); ok && v != "" {
@@ -113,6 +114,12 @@ func init() {
 	idg_mail_host = getEnv("IDG_MAIL_HOST", "")
 	idg_mail_port = getEnv("IDG_MAIL_PORT", "")
 	idg_mail_addr = getEnv("IDG_MAIL_ADDR", "")
+
+	// SEND INIT EMAIL
+	v, x = os.LookupEnv("IDG_SEND_INIT_EMAIL")
+	if !x && v == "true" {
+		idg_send_init_email = true
+	}
 }
 
 func fetchPkey(path string) (crypto.PrivateKey, error) {
