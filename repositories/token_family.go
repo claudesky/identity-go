@@ -40,9 +40,9 @@ func (r *TokenFamilyRepository) InsertToken(
 	m *models.TokenFamily,
 ) error {
 	query := `insert into token_families (
-		id, sub, last_issued, created_at, last_issued_at
+		id, sub, last_issued, created_at, last_issued_at, expires_at
 	) values (
-		@id, @sub, @last_issued, @created_at, @last_issued_at
+		@id, @sub, @last_issued, @created_at, @last_issued_at, @expires_at
 	)`
 	args := pgx.NamedArgs{
 		"id":             m.Id,
@@ -50,6 +50,7 @@ func (r *TokenFamilyRepository) InsertToken(
 		"last_issued":    m.LastIssued,
 		"created_at":     m.CreatedAt,
 		"last_issued_at": m.LastIssuedAt,
+		"expires_at":     m.ExpiresAt,
 	}
 
 	return r.db.Exec(ctx, query, args)

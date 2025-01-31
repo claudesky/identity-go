@@ -8,4 +8,5 @@ type TokenFamily struct {
 	LastIssued   string    `json:"last_issued"`
 	CreatedAt    time.Time `json:"created_at"`
 	LastIssuedAt time.Time `json:"last_issued_at"`
+	ExpiresAt    time.Time `json:"expires_at"`
 }

@@ -18,7 +18,8 @@ create table token_families (
     sub uuid not null,
     last_issued uuid not null,
     created_at timestamp not null,
-    last_issued_at timestamp not null
+    last_issued_at timestamp not null,
+    expires_at timestamp not null
 );
 
 insert into users (id, name, email, password)
