@@ -1,4 +1,5 @@
 {
     "livePreview.serverRoot": "frontend",
-    "go.formatTool": "golines"
+    "go.formatTool": "golines",
+    "editor.tabSize": 2,
 }
