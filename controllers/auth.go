@@ -69,41 +69,6 @@ func validateRefreshRequest(rq *RefreshRequest) error {
 	return nil
 }
 
-func (c *AuthController) generateTokens(now time.Time, sub string, jtf string, jtiRT string) (refreshString string, tokenString string, expRT time.Time, err error) {
-	// Tokens TTL
-	ttlRT := time.Hour * time.Duration(72)
-	ttlAT := time.Minute * time.Duration(5)
-	expRT = now.Add(ttlRT)
-	expAT := now.Add(ttlAT)
-
-	refreshString, err = c.th.SignToken(jwt.MapClaims{
-		"jti": jtiRT,
-		"jtf": jtf,
-		"sub": sub,
-		"exp": expRT.Unix(),
-		"typ": "refresh_token",
-	})
-	if err != nil {
-		slog.Info("refresh token signing failed", "error", err)
-		return
-	}
-
-	tokenString, err = c.th.SignToken(jwt.MapClaims{
-		"jti": utils.PseudoUUID(),
-		"jtf": jtf,
-		"jtp": jtf,
-		"sub": sub,
-		"exp": expAT.Unix(),
-		"typ": "access_token",
-	})
-	if err != nil {
-		slog.Info("access token signing failed", "error", err)
-		return
-	}
-
-	return
-}
-
 func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *LoginRequest) {
 	// Validation
 	if err := validateLoginRequest(rq); err != nil {
@@ -144,7 +109,7 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *Login
 	now := time.Now()
 
 	// Generate Tokens
-	refreshString, tokenString, expRT, err := c.generateTokens(now, user.Id, jtf, jtf)
+	refreshString, tokenString, expRT, err := c.th.GenerateTokens(&now, user.Id, jtf, jtf)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -173,7 +138,7 @@ func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request, rq *Ref
 	}
 
 	// Verify Token
-	ok, claims := utils.VerifyRefreshToken(c.th, *rq.RefreshToken)
+	ok, claims := c.th.VerifyRefreshToken(*rq.RefreshToken)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -210,7 +175,8 @@ func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request, rq *Ref
 
 	now := time.Now()
 
-	refreshString, tokenString, expRT, err := c.generateTokens(now, tf.Sub, tf.Id, jtiRT)
+	refreshString, tokenString, expRT, err := c.th.
+		GenerateTokens(&now, tf.Sub, tf.Id, jtiRT)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
