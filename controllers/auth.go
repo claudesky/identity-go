@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/models"
 	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
@@ -32,9 +33,9 @@ func NewAuthController(
 }
 
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("POST /auth/login", c.login)
+	mux.HandleFunc("POST /auth/login", middleware.JSONDecoderMiddleware(c.login))
 	mux.HandleFunc("GET /auth/validate", c.validate)
-	mux.HandleFunc("POST /auth/refresh", c.refresh)
+	mux.HandleFunc("POST /auth/refresh", middleware.JSONDecoderMiddleware(c.refresh))
 }
 
 type LoginRequest struct {
@@ -51,26 +52,66 @@ type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
-	var rq *LoginRequest
+func validateLoginRequest(rq *LoginRequest) error {
+	if rq.Email == nil {
+		return errors.New("[email] is required")
+	}
+	if rq.Password == nil {
+		return errors.New("[password] is required")
+	}
+	return nil
+}
 
-	rq, err := utils.DecodeRequestJSON[LoginRequest](r)
+func validateRefreshRequest(rq *RefreshRequest) error {
+	if rq.RefreshToken == nil {
+		return errors.New("[refresh_token] is required")
+	}
+	return nil
+}
+
+func (c *AuthController) generateTokens(now time.Time, sub string, jtf string, jtiRT string) (refreshString string, tokenString string, expRT time.Time, err error) {
+	// Tokens TTL
+	ttlRT := time.Hour * time.Duration(72)
+	ttlAT := time.Minute * time.Duration(5)
+	expRT = now.Add(ttlRT)
+	expAT := now.Add(ttlAT)
+
+	refreshString, err = c.th.SignToken(jwt.MapClaims{
+		"jti": jtiRT,
+		"jtf": jtf,
+		"sub": sub,
+		"exp": expRT.Unix(),
+		"typ": "refresh_token",
+	})
 	if err != nil {
+		slog.Info("refresh token signing failed", "error", err)
+		return
+	}
+
+	tokenString, err = c.th.SignToken(jwt.MapClaims{
+		"jti": utils.PseudoUUID(),
+		"jtf": jtf,
+		"jtp": jtf,
+		"sub": sub,
+		"exp": expAT.Unix(),
+		"typ": "access_token",
+	})
+	if err != nil {
+		slog.Info("access token signing failed", "error", err)
+		return
+	}
+
+	return
+}
+
+func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *LoginRequest) {
+	// Validation
+	if err := validateLoginRequest(rq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Validation
-	if rq.Email == nil {
-		http.Error(w, "[email] is required", http.StatusBadRequest)
-		return
-	}
-
-	if rq.Password == nil {
-		http.Error(w, "[password] is required", http.StatusBadRequest)
-		return
-	}
-
+	// Get user
 	user, err := c.ur.GetUserByEmail(r.Context(), *rq.Email)
 	if err != nil {
 		// Horrible error handling, should get this handled outside?
@@ -100,37 +141,11 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 
 	// Token Family ID
 	jtf := utils.PseudoUUID()
-
-	// Tokens TTL
 	now := time.Now()
-	ttlRT := time.Hour * time.Duration(72)
-	ttlAT := time.Minute * time.Duration(5)
-	expRT := now.Add(ttlRT)
-	expAT := now.Add(ttlAT)
 
-	refreshString, err := c.th.SignToken(jwt.MapClaims{
-		"jti": jtf,
-		"jtf": jtf,
-		"sub": user.Id,
-		"exp": expRT.Unix(),
-		"typ": "refresh_token",
-	})
+	// Generate Tokens
+	refreshString, tokenString, expRT, err := c.generateTokens(now, user.Id, jtf, jtf)
 	if err != nil {
-		slog.Info("refresh token signing failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	tokenString, err := c.th.SignToken(jwt.MapClaims{
-		"jti": utils.PseudoUUID(),
-		"jtf": jtf,
-		"jtp": jtf,
-		"sub": user.Id,
-		"exp": expAT.Unix(),
-		"typ": "access_token",
-	})
-	if err != nil {
-		log.Fatalf("access token signing failed: %s", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -150,84 +165,37 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request) {
-	var rq *RefreshRequest
-
-	rq, err := utils.DecodeRequestJSON[RefreshRequest](r)
-	if err != nil {
+func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request, rq *RefreshRequest) {
+	// Validation
+	if err := validateRefreshRequest(rq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if rq.RefreshToken == nil {
-		http.Error(w, "[refresh_token] is required", http.StatusBadRequest)
-		return
-	}
-
 	// Verify Token
-	token, err := c.th.VerifyToken(*rq.RefreshToken)
-
-	if err != nil {
-		slog.Info("token verification failed", "error", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
+	ok, claims := utils.VerifyRefreshToken(c.th, *rq.RefreshToken)
 	if !ok {
-		fmt.Println(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	// Verify token is a refresh token
-	jti, ok := claims["jti"].(string)
-	if !ok {
-		slog.Error("no jti", "token", rq.RefreshToken)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	sub, err := claims.GetSubject()
-	if err != nil {
-		slog.Error("no sub", "token", rq.RefreshToken, "error", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	typ, ok := claims["typ"].(string)
-	if !ok {
-		slog.Error("no typ", "token", rq.RefreshToken)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	jtf, ok := claims["jtf"].(string)
-	if !ok {
-		slog.Error("no jtf", "token", rq.RefreshToken)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	if typ != "refresh_token" {
-		http.Error(w, "token must be a refresh token", http.StatusBadRequest)
 		return
 	}
 
 	// Get the token family
-	tf, err := c.tfr.GetTokenById(r.Context(), jtf)
+	tf, err := c.tfr.GetTokenById(r.Context(), claims.JTF)
 	if err != nil {
-		slog.Warn("could not find token family", "token", rq.RefreshToken, "sub", sub, "error", err)
+		slog.Warn("could not find token family", "token", rq.RefreshToken, "sub", claims.SUB, "error", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Make sure sub is correct
-	if sub != tf.Sub {
-		slog.Warn("invalid sub for refresh token", "token", rq.RefreshToken, "sub", sub, "family_sub", tf.Sub)
+	if claims.SUB != tf.Sub {
+		slog.Warn("invalid sub for refresh token", "token", rq.RefreshToken, "sub", claims.SUB, "family_sub", tf.Sub)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Check last issued
-	if jti != tf.LastIssued {
+	if claims.JTI != tf.LastIssued {
 		slog.Warn("invalid last issued for refresh token", "token", rq.RefreshToken)
 		// TODO: Add revoke here
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -235,42 +203,15 @@ func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Possible future checks
-
-	// Redundant logic with login, for refactor
+	// ...
 
 	// New Refresh Token ID
 	jtiRT := utils.PseudoUUID()
 
-	// Tokens TTL
 	now := time.Now()
-	ttlRT := time.Hour * time.Duration(72)
-	ttlAT := time.Minute * time.Duration(5)
-	expRT := now.Add(ttlRT)
-	expAT := now.Add(ttlAT)
 
-	refreshString, err := c.th.SignToken(jwt.MapClaims{
-		"jti": jtiRT,
-		"jtf": jtf,
-		"sub": sub,
-		"exp": expRT.Unix(),
-		"typ": "refresh_token",
-	})
+	refreshString, tokenString, expRT, err := c.generateTokens(now, tf.Sub, tf.Id, jtiRT)
 	if err != nil {
-		slog.Info("refresh token signing failed", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	tokenString, err := c.th.SignToken(jwt.MapClaims{
-		"jti": utils.PseudoUUID(),
-		"jtf": jtf,
-		"jtp": jtiRT,
-		"sub": sub,
-		"exp": expAT.Unix(),
-		"typ": "access_token",
-	})
-	if err != nil {
-		log.Fatalf("access token signing failed: %s", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
