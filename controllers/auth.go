@@ -210,6 +210,7 @@ func (c *AuthController) refresh(
 
 	now := time.Now()
 
+	// Generate new tokens
 	refreshString, tokenString, expRT, err := c.th.
 		GenerateTokens(&now, tf.Sub, tf.Id, jtiRT)
 	if err != nil {
