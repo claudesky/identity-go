@@ -31,7 +31,10 @@ func (r *TokenFamilyRepository) GetTokensBySub(
 		return nil, err
 	}
 
-	result, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[models.TokenFamily])
+	result, err := pgx.CollectRows(
+		rows,
+		pgx.RowToStructByNameLax[models.TokenFamily],
+	)
 	return &result, err
 }
 
@@ -71,7 +74,10 @@ func (r *TokenFamilyRepository) GetTokenById(
 		return nil, err
 	}
 
-	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.TokenFamily])
+	result, err := pgx.CollectOneRow(
+		rows,
+		pgx.RowToStructByNameLax[models.TokenFamily],
+	)
 	return &result, err
 }
 

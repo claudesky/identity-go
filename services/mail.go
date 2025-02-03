@@ -17,7 +17,12 @@ func NewMail(u string, p string, h string, port string) *Mail {
 	}
 }
 
-func (s *Mail) SendMailSimple(from string, to string, sub string, msg string) error {
+func (s *Mail) SendMailSimple(
+	from string,
+	to string,
+	sub string,
+	msg string,
+) error {
 	toArray := [1]string{to}
 	msgBytes := []byte(fmt.Sprintf(
 		"To: %s\r\n"+

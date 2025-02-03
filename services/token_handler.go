@@ -39,12 +39,11 @@ func (th *TokenHandler) SignToken(claims jwt.Claims) (string, error) {
 func (th *TokenHandler) VerifyToken(ts string) (token *jwt.Token, err error) {
 
 	token, err = jwt.Parse(ts, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.
+				Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return th.pubkey, nil
 	})
 

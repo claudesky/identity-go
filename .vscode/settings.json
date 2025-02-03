@@ -1,3 +1,4 @@
 {
-    "livePreview.serverRoot": "frontend"
+    "livePreview.serverRoot": "frontend",
+    "go.formatTool": "golines"
 }

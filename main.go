@@ -28,7 +28,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	mail := services.NewMail(idg_mail_user, idg_mail_pass, idg_mail_host, idg_mail_port)
+	mail := services.NewMail(
+		idg_mail_user,
+		idg_mail_pass,
+		idg_mail_host,
+		idg_mail_port,
+	)
 
 	// Init Repositories
 	userRepository := repositories.NewUserRepository(database)

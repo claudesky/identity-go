@@ -35,7 +35,10 @@ func NewAuthController(
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /auth/login", middleware.JSONDecoderMiddleware(c.login))
 	mux.HandleFunc("GET /auth/validate", c.validate)
-	mux.HandleFunc("POST /auth/refresh", middleware.JSONDecoderMiddleware(c.refresh))
+	mux.HandleFunc(
+		"POST /auth/refresh",
+		middleware.JSONDecoderMiddleware(c.refresh),
+	)
 }
 
 type LoginRequest struct {
@@ -69,7 +72,11 @@ func validateRefreshRequest(rq *RefreshRequest) error {
 	return nil
 }
 
-func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *LoginRequest) {
+func (c *AuthController) login(
+	w http.ResponseWriter,
+	r *http.Request,
+	rq *LoginRequest,
+) {
 	// Validation
 	if err := validateLoginRequest(rq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -98,7 +105,10 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *Login
 	}
 
 	// Check Password
-	err = bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(*rq.Password))
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(*user.Password),
+		[]byte(*rq.Password),
+	)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -109,7 +119,12 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *Login
 	now := time.Now()
 
 	// Generate Tokens
-	refreshString, tokenString, expRT, err := c.th.GenerateTokens(&now, user.Id, jtf, jtf)
+	refreshString, tokenString, expRT, err := c.th.GenerateTokens(
+		&now,
+		user.Id,
+		jtf,
+		jtf,
+	)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -130,7 +145,11 @@ func (c *AuthController) login(w http.ResponseWriter, r *http.Request, rq *Login
 	})
 }
 
-func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request, rq *RefreshRequest) {
+func (c *AuthController) refresh(
+	w http.ResponseWriter,
+	r *http.Request,
+	rq *RefreshRequest,
+) {
 	// Validation
 	if err := validateRefreshRequest(rq); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -147,14 +166,30 @@ func (c *AuthController) refresh(w http.ResponseWriter, r *http.Request, rq *Ref
 	// Get the token family
 	tf, err := c.tfr.GetTokenById(r.Context(), claims.JTF)
 	if err != nil {
-		slog.Warn("could not find token family", "token", rq.RefreshToken, "sub", claims.SUB, "error", err)
+		slog.Warn(
+			"could not find token family",
+			"token",
+			rq.RefreshToken,
+			"sub",
+			claims.SUB,
+			"error",
+			err,
+		)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Make sure sub is correct
 	if claims.SUB != tf.Sub {
-		slog.Warn("invalid sub for refresh token", "token", rq.RefreshToken, "sub", claims.SUB, "family_sub", tf.Sub)
+		slog.Warn(
+			"invalid sub for refresh token",
+			"token",
+			rq.RefreshToken,
+			"sub",
+			claims.SUB,
+			"family_sub",
+			tf.Sub,
+		)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

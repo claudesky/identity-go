@@ -17,7 +17,11 @@ var (
 	once sync.Once
 )
 
-func NewDatabase(ctx context.Context, cstr string, pass *string) (*Database, error) {
+func NewDatabase(
+	ctx context.Context,
+	cstr string,
+	pass *string,
+) (*Database, error) {
 	var err error
 	once.Do(func() {
 		var conf *pgxpool.Config
