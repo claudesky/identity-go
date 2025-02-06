@@ -19,7 +19,8 @@ create table token_families (
     last_issued uuid not null,
     created_at timestamp not null,
     last_issued_at timestamp not null,
-    expires_at timestamp not null
+    expires_at timestamp not null,
+    revoked boolean not null default false
 );
 
 insert into users (id, name, email, password)

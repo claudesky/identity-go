@@ -9,4 +9,5 @@ type TokenFamily struct {
 	CreatedAt    time.Time `json:"created_at"`
 	LastIssuedAt time.Time `json:"last_issued_at"`
 	ExpiresAt    time.Time `json:"expires_at"`
+	Revoked      bool      `json:"revoked"`
 }
