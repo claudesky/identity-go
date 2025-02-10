@@ -23,6 +23,19 @@ create table token_families (
     revoked boolean not null default false
 );
 
+create table verifications (
+    user_id uuid not null,
+    code text not null,
+    field text not null,
+    value text not null,
+    revoked boolean not null default false,
+    accepted boolean not null default false,
+    expires_at timestamp not null,
+    created_at timestamp not null
+);
+
+-- Admin User
+
 insert into users (id, name, email, password)
 values (
     '0615b123-1a98-405b-bc44-6d41ad6a193c',
