@@ -23,11 +23,10 @@ create table token_families (
     revoked boolean not null default false
 );
 
-create table verifications (
+create table email_verification_requests (
     user_id uuid not null,
-    code text not null,
-    field text not null,
-    value text not null,
+    email text not null,
+    token text not null,
     revoked boolean not null default false,
     accepted boolean not null default false,
     expires_at timestamp not null,
