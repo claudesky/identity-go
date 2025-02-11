@@ -12,6 +12,7 @@ import (
 const defaultPkeyPath = "./keys/private.pem"
 const defaultPubkeyPath = "./keys/public.pem"
 
+var idg_app_url string = "http://localhost:9102"
 var idg_port string = ":9102"
 var idg_pkey crypto.PrivateKey
 var idg_pubkey crypto.PublicKey
@@ -34,6 +35,9 @@ func getEnv(key string, fallback string) string {
 func init() {
 	var v string
 	var x bool
+
+	// PORT
+	idg_app_url = getEnv("IDG_APP_URL", idg_app_url)
 
 	// PORT
 	idg_port = getEnv("IDG_PORT", idg_port)
