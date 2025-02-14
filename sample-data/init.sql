@@ -8,6 +8,12 @@ create table users (
     phone_number_verified_on timestamp
 );
 
+create table register_requests (
+    id uuid primary key,
+    password text not null,
+    email text constraint email_length check (char_length(email) <= 255) not null,
+)
+
 create table audiences (
     id uuid primary key,
     name text
@@ -24,7 +30,7 @@ create table token_families (
 );
 
 create table email_verification_requests (
-    user_id uuid not null,
+    register_request_id uuid not null,
     email text not null,
     token text not null,
     revoked boolean not null default false,
