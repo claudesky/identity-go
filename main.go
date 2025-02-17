@@ -38,6 +38,9 @@ func main() {
 	// Init Repositories
 	userRepository := repositories.NewUserRepository(database)
 	tokenFamilyRepository := repositories.NewTokenFamilyRepository(database)
+	registerRequestRepository := repositories.NewRegisterRequestRepository(
+		database,
+	)
 
 	// Init Controllers
 	mux := http.NewServeMux()
@@ -49,6 +52,7 @@ func main() {
 		tokenHandler,
 		userRepository,
 		tokenFamilyRepository,
+		registerRequestRepository,
 	)
 	authController.RegisterRoutes(mux)
 

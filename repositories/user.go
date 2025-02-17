@@ -32,5 +32,27 @@ func (r *UserRepository) GetUserByEmail(
 	}
 
 	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.User])
+	if err != nil {
+		return nil, err
+	}
+
 	return &result, err
+}
+
+func (r *UserRepository) InsertUser(
+	ctx context.Context,
+	m *models.User,
+) error {
+	query := `insert into users (
+		id, password, email
+	) values (
+		@id, @password, @email
+	)`
+	args := pgx.NamedArgs{
+		"id":       m.Id,
+		"password": m.Password,
+		"email":    m.Email,
+	}
+
+	return r.db.Exec(ctx, query, args)
 }

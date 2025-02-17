@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/mail"
 	"strings"
 	"time"
 
@@ -22,17 +23,23 @@ type AuthController struct {
 	th  *services.TokenHandler
 	ur  *repositories.UserRepository
 	tfr *repositories.TokenFamilyRepository
+	rrr *repositories.RegisterRequestRepository
 }
 
 func NewAuthController(
 	th *services.TokenHandler,
 	ur *repositories.UserRepository,
 	tfr *repositories.TokenFamilyRepository,
+	rrr *repositories.RegisterRequestRepository,
 ) *AuthController {
-	return &AuthController{th, ur, tfr}
+	return &AuthController{th, ur, tfr, rrr}
 }
 
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc(
+		"POST /auth/register",
+		middleware.JSONDecoderMiddleware(c.register),
+	)
 	mux.HandleFunc("POST /auth/login", middleware.JSONDecoderMiddleware(c.login))
 	mux.HandleFunc("GET /auth/validate", c.validate)
 	mux.HandleFunc(
@@ -51,11 +58,94 @@ func validateLoginRequest(rq *LoginRequest) error {
 	return nil
 }
 
+func validateRegisterRequest(rq *RegisterRequest) (err error) {
+	if err = validateLoginRequest(rq); err != nil {
+		return
+	}
+	if _, err = mail.ParseAddress(*rq.Email); err != nil {
+		return errors.New("[email] must be a valid email address")
+	}
+	if err = utils.ValidatePassword(*rq.Password); err != nil {
+		return err
+	}
+	return
+}
+
 func validateRefreshRequest(rq *RefreshRequest) error {
 	if rq.RefreshToken == nil {
 		return errors.New("[refresh_token] is required")
 	}
 	return nil
+}
+
+func (c *AuthController) register(
+	w http.ResponseWriter,
+	r *http.Request,
+	rq *RegisterRequest,
+) {
+	// Validation
+	if err := validateRegisterRequest(rq); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Check existing user
+	if user, _ := c.ur.GetUserByEmail(r.Context(), *rq.Email); user != nil {
+		http.Error(w, "User with email already exists", http.StatusConflict)
+		return
+	}
+
+	hashedPassword, err := utils.PasswordHash(*rq.Password)
+
+	// Hash password
+	if err != nil {
+		slog.Error(
+			"failed to hash password",
+			"error",
+			err.Error(),
+			"email",
+			rq.Email,
+		)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+
+	slog.Error(hashedPassword)
+
+	// Create Registration Request
+	registerRequest := &models.RegisterRequest{
+		Id:        utils.PseudoUUID(),
+		Email:     rq.Email,
+		Password:  &hashedPassword,
+		CreatedAt: time.Now().UTC(),
+	}
+
+	err = c.rrr.InsertRegisterRequest(r.Context(), registerRequest)
+
+	// Handle Registration Request insertion error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).
+			Encode(&Message{
+				Message: "Internal Server Error",
+				Status:  http.StatusInternalServerError,
+			})
+		slog.Error(
+			"failed to insert registration request",
+			"error",
+			err.Error(),
+			"email",
+			rq.Email,
+		)
+		return
+	}
+
+	// Return success message
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).
+		Encode(&Message{
+			Message: "Registration request received.",
+			Status:  http.StatusCreated,
+		})
 }
 
 func (c *AuthController) login(

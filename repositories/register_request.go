@@ -18,6 +18,25 @@ func NewRegisterRequestRepository(
 	return &RegisterRequestRepository{db}
 }
 
+func (r *RegisterRequestRepository) InsertRegisterRequest(
+	ctx context.Context,
+	m *models.RegisterRequest,
+) error {
+	query := `insert into register_requests (
+		id, email, password, created_at
+	) values (
+		@id, @email, @password, @created_at
+	)`
+	args := pgx.NamedArgs{
+		"id":         m.Id,
+		"email":      m.Email,
+		"password":   m.Password,
+		"created_at": m.CreatedAt,
+	}
+
+	return r.db.Exec(ctx, query, args)
+}
+
 func (r *RegisterRequestRepository) GetRegisterRequestById(
 	ctx context.Context,
 	id string,

@@ -13,7 +13,7 @@ create table register_requests (
     password text not null,
     email text constraint email_length check (char_length(email) <= 255) not null,
     created_at timestamp not null
-)
+);
 
 create table audiences (
     id uuid primary key,
