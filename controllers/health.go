@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-type Message struct {
-	Message string `json:"message"`
-}
-
 type HealthController struct {
 	healthy bool
 }

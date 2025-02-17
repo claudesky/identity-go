@@ -41,20 +41,6 @@ func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 	)
 }
 
-type LoginRequest struct {
-	Email    *string `json:"email"`
-	Password *string `json:"password"`
-}
-
-type RefreshRequest struct {
-	RefreshToken *string `json:"refresh_token"`
-}
-
-type TokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 func validateLoginRequest(rq *LoginRequest) error {
 	if rq.Email == nil {
 		return errors.New("[email] is required")
