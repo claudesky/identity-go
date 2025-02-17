@@ -56,6 +56,10 @@ func (r *RegisterRequestRepository) GetRegisterRequestById(
 		rows,
 		pgx.RowToStructByNameLax[models.RegisterRequest],
 	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &result, err
 }
 
@@ -78,5 +82,9 @@ func (r *RegisterRequestRepository) GetRegisterRequestByEmail(
 		rows,
 		pgx.RowToStructByNameLax[models.RegisterRequest],
 	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &result, err
 }
