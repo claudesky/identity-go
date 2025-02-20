@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/claudesky/identity-go/controllers"
+	"github.com/claudesky/identity-go/database"
 	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
@@ -18,9 +19,8 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	// Init Services
-	tokenHandler := services.NewTokenHandler(idg_pkey, idg_pubkey)
-	database, err := services.NewDatabase(
+	// Init Database
+	database, err := database.NewDatabase(
 		context.Background(),
 		idg_db_conn,
 		&idg_db_pass,
@@ -40,6 +40,16 @@ func main() {
 	tokenFamilyRepository := repositories.NewTokenFamilyRepository(database)
 	registerRequestRepository := repositories.NewRegisterRequestRepository(
 		database,
+	)
+
+	// Init Services
+	tokenHandler := services.NewTokenHandler(idg_pkey, idg_pubkey)
+	mail := services.NewMail(
+		idg_mail_user,
+		idg_mail_pass,
+		idg_mail_host,
+		idg_mail_port,
+		idg_mail_addr,
 	)
 
 	// Init Controllers

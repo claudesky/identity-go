@@ -3,16 +3,16 @@ package repositories
 import (
 	"context"
 
+	"github.com/claudesky/identity-go/database"
 	"github.com/claudesky/identity-go/models"
-	"github.com/claudesky/identity-go/services"
 	"github.com/jackc/pgx/v5"
 )
 
 type TokenFamilyRepository struct {
-	db *services.Database
+	db *database.Database
 }
 
-func NewTokenFamilyRepository(db *services.Database) *TokenFamilyRepository {
+func NewTokenFamilyRepository(db *database.Database) *TokenFamilyRepository {
 	return &TokenFamilyRepository{db}
 }
 

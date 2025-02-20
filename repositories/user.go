@@ -3,16 +3,16 @@ package repositories
 import (
 	"context"
 
+	"github.com/claudesky/identity-go/database"
 	"github.com/claudesky/identity-go/models"
-	"github.com/claudesky/identity-go/services"
 	"github.com/jackc/pgx/v5"
 )
 
 type UserRepository struct {
-	db *services.Database
+	db *database.Database
 }
 
-func NewUserRepository(db *services.Database) *UserRepository {
+func NewUserRepository(db *database.Database) *UserRepository {
 	return &UserRepository{db}
 }
 

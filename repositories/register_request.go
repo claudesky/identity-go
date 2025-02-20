@@ -3,17 +3,17 @@ package repositories
 import (
 	"context"
 
+	"github.com/claudesky/identity-go/database"
 	"github.com/claudesky/identity-go/models"
-	"github.com/claudesky/identity-go/services"
 	"github.com/jackc/pgx/v5"
 )
 
 type RegisterRequestRepository struct {
-	db *services.Database
+	db *database.Database
 }
 
 func NewRegisterRequestRepository(
-	db *services.Database,
+	db *database.Database,
 ) *RegisterRequestRepository {
 	return &RegisterRequestRepository{db}
 }
