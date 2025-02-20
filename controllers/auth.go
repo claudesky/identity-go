@@ -21,6 +21,7 @@ import (
 
 type AuthController struct {
 	th  *services.TokenHandler
+	evs *services.EmailVerification
 	ur  *repositories.UserRepository
 	tfr *repositories.TokenFamilyRepository
 	rrr *repositories.RegisterRequestRepository
@@ -28,11 +29,12 @@ type AuthController struct {
 
 func NewAuthController(
 	th *services.TokenHandler,
+	evs *services.EmailVerification,
 	ur *repositories.UserRepository,
 	tfr *repositories.TokenFamilyRepository,
 	rrr *repositories.RegisterRequestRepository,
 ) *AuthController {
-	return &AuthController{th, ur, tfr, rrr}
+	return &AuthController{th, evs, ur, tfr, rrr}
 }
 
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
@@ -109,8 +111,6 @@ func (c *AuthController) register(
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 
-	slog.Error(hashedPassword)
-
 	// Create Registration Request
 	registerRequest := &models.RegisterRequest{
 		Id:        utils.PseudoUUID(),
@@ -118,10 +118,7 @@ func (c *AuthController) register(
 		Password:  &hashedPassword,
 		CreatedAt: time.Now().UTC(),
 	}
-
 	err = c.rrr.InsertRegisterRequest(r.Context(), registerRequest)
-
-	// Handle Registration Request insertion error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).
@@ -131,6 +128,29 @@ func (c *AuthController) register(
 			})
 		slog.Error(
 			"failed to insert registration request",
+			"error",
+			err.Error(),
+			"email",
+			rq.Email,
+		)
+		return
+	}
+
+	// Create Email Verification Request
+	_, err = c.evs.CreateEmailVerificationRequest(
+		r.Context(),
+		registerRequest.Id,
+		*registerRequest.Email,
+	)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).
+			Encode(&Message{
+				Message: "Internal Server Error",
+				Status:  http.StatusInternalServerError,
+			})
+		slog.Error(
+			"failed to send email verification",
 			"error",
 			err.Error(),
 			"email",

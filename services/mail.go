@@ -6,15 +6,25 @@ import (
 )
 
 type Mail struct {
-	auth smtp.Auth
-	url  string
+	auth         smtp.Auth
+	url          string
+	sysEmailAddr string
 }
 
-func NewMail(u string, p string, h string, port string) *Mail {
+func NewMail(u string, p string, h string, port string, sysEmailAddr string) *Mail {
 	return &Mail{
-		auth: smtp.PlainAuth("", u, p, h),
-		url:  h + ":" + port,
+		auth:         smtp.PlainAuth("", u, p, h),
+		url:          h + ":" + port,
+		sysEmailAddr: sysEmailAddr,
 	}
+}
+
+func (s *Mail) SendSystemEmailSimple(
+	to string,
+	sub string,
+	msg string,
+) error {
+	return s.SendMailSimple(s.sysEmailAddr, to, sub, msg)
 }
 
 func (s *Mail) SendMailSimple(

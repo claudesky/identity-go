@@ -28,17 +28,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	mail := services.NewMail(
-		idg_mail_user,
-		idg_mail_pass,
-		idg_mail_host,
-		idg_mail_port,
-	)
 
 	// Init Repositories
 	userRepository := repositories.NewUserRepository(database)
 	tokenFamilyRepository := repositories.NewTokenFamilyRepository(database)
 	registerRequestRepository := repositories.NewRegisterRequestRepository(
+		database,
+	)
+	emailVerificationRepository := repositories.NewEmailVerificationRepository(
 		database,
 	)
 
@@ -51,6 +48,10 @@ func main() {
 		idg_mail_port,
 		idg_mail_addr,
 	)
+	emailVerificationService := services.NewEmailVerification(
+		emailVerificationRepository,
+		mail,
+	)
 
 	// Init Controllers
 	mux := http.NewServeMux()
@@ -60,6 +61,7 @@ func main() {
 
 	authController := controllers.NewAuthController(
 		tokenHandler,
+		emailVerificationService,
 		userRepository,
 		tokenFamilyRepository,
 		registerRequestRepository,
@@ -82,7 +84,7 @@ func main() {
 
 	// Send Init Email
 	if idg_send_init_email {
-		if err := mail.SendMailSimple(idg_mail_addr, "admin@example.org", "test", "server init"); err != nil {
+		if err := mail.SendSystemEmailSimple("admin@example.org", "test", "server init"); err != nil {
 			slog.Warn("Initialization Email Error", "error", err.Error())
 		}
 	}
