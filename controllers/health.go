@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 )
 
@@ -19,8 +18,8 @@ func (c *HealthController) RegisterRoutes(mux *http.ServeMux) {
 
 func (c *HealthController) check(w http.ResponseWriter, _ *http.Request) {
 	if c.healthy {
-		json.NewEncoder(w).Encode(&Message{Message: "ok"})
+		respondWithMessage(w, "OK", http.StatusOK)
 	} else {
-		http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+		respondWithError(w, "Service Unavailable", http.StatusServiceUnavailable)
 	}
 }
