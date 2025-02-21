@@ -1,12 +1,9 @@
 package controllers
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/mail"
 	"strings"
 	"time"
 
@@ -42,43 +39,21 @@ func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 		"POST /auth/register",
 		middleware.JSONDecoderMiddleware(c.register),
 	)
-	mux.HandleFunc("POST /auth/login", middleware.JSONDecoderMiddleware(c.login))
-	mux.HandleFunc("GET /auth/validate", c.validate)
+	mux.HandleFunc(
+		"POST /auth/login",
+		middleware.JSONDecoderMiddleware(c.login),
+	)
+	mux.HandleFunc(
+		"GET /auth/validate",
+		c.validate,
+	)
 	mux.HandleFunc(
 		"POST /auth/refresh",
 		middleware.JSONDecoderMiddleware(c.refresh),
 	)
 }
 
-func validateLoginRequest(rq *LoginRequest) error {
-	if rq.Email == nil {
-		return errors.New("[email] is required")
-	}
-	if rq.Password == nil {
-		return errors.New("[password] is required")
-	}
-	return nil
-}
-
-func validateRegisterRequest(rq *RegisterRequest) (err error) {
-	if err = validateLoginRequest(rq); err != nil {
-		return
-	}
-	if _, err = mail.ParseAddress(*rq.Email); err != nil {
-		return errors.New("[email] must be a valid email address")
-	}
-	if err = utils.ValidatePassword(*rq.Password); err != nil {
-		return err
-	}
-	return
-}
-
-func validateRefreshRequest(rq *RefreshRequest) error {
-	if rq.RefreshToken == nil {
-		return errors.New("[refresh_token] is required")
-	}
-	return nil
-}
+// -- Controller Methods
 
 func (c *AuthController) register(
 	w http.ResponseWriter,
@@ -86,14 +61,14 @@ func (c *AuthController) register(
 	rq *RegisterRequest,
 ) {
 	// Validation
-	if err := validateRegisterRequest(rq); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := rq.validate(); err != nil {
+		respondWithError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Check existing user
 	if user, _ := c.ur.GetUserByEmail(r.Context(), *rq.Email); user != nil {
-		http.Error(w, "User with email already exists", http.StatusConflict)
+		respondWithError(w, "User with email already exists", http.StatusConflict)
 		return
 	}
 
@@ -108,7 +83,7 @@ func (c *AuthController) register(
 			"email",
 			rq.Email,
 		)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		internalServerError(w)
 	}
 
 	// Create Registration Request
@@ -120,12 +95,6 @@ func (c *AuthController) register(
 	}
 	err = c.rrr.InsertRegisterRequest(r.Context(), registerRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).
-			Encode(&Message{
-				Message: "Internal Server Error",
-				Status:  http.StatusInternalServerError,
-			})
 		slog.Error(
 			"failed to insert registration request",
 			"error",
@@ -133,6 +102,7 @@ func (c *AuthController) register(
 			"email",
 			rq.Email,
 		)
+		internalServerError(w)
 		return
 	}
 
@@ -143,12 +113,6 @@ func (c *AuthController) register(
 		*registerRequest.Email,
 	)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).
-			Encode(&Message{
-				Message: "Internal Server Error",
-				Status:  http.StatusInternalServerError,
-			})
 		slog.Error(
 			"failed to send email verification",
 			"error",
@@ -156,16 +120,11 @@ func (c *AuthController) register(
 			"email",
 			rq.Email,
 		)
+		internalServerError(w)
 		return
 	}
 
-	// Return success message
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).
-		Encode(&Message{
-			Message: "Registration request received.",
-			Status:  http.StatusCreated,
-		})
+	respondWithMessage(w, "Registration Request received.", http.StatusCreated)
 }
 
 func (c *AuthController) login(
@@ -174,7 +133,7 @@ func (c *AuthController) login(
 	rq *LoginRequest,
 ) {
 	// Validation
-	if err := validateLoginRequest(rq); err != nil {
+	if err := rq.validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -189,14 +148,14 @@ func (c *AuthController) login(
 				slog.String("email", *rq.Email),
 			),
 		)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
 	if user.Password == nil {
 		// Better handling later
 		slog.Warn("user has no password")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
@@ -206,7 +165,7 @@ func (c *AuthController) login(
 		[]byte(*rq.Password),
 	)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
@@ -222,7 +181,7 @@ func (c *AuthController) login(
 		jtf,
 	)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		internalServerError(w)
 		return
 	}
 
@@ -235,10 +194,10 @@ func (c *AuthController) login(
 		ExpiresAt:    expRT.UTC(),
 	})
 
-	json.NewEncoder(w).Encode(&TokenResponse{
+	respondWithJSON(w, &TokenResponse{
 		AccessToken:  tokenString,
 		RefreshToken: refreshString,
-	})
+	}, http.StatusOK)
 }
 
 func (c *AuthController) refresh(
@@ -247,15 +206,15 @@ func (c *AuthController) refresh(
 	rq *RefreshRequest,
 ) {
 	// Validation
-	if err := validateRefreshRequest(rq); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := rq.validate(); err != nil {
+		respondWithError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Verify Token
 	ok, claims := c.th.VerifyRefreshToken(*rq.RefreshToken)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
@@ -271,7 +230,7 @@ func (c *AuthController) refresh(
 			"error",
 			err,
 		)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
@@ -286,7 +245,7 @@ func (c *AuthController) refresh(
 			"family_sub",
 			tf.Sub,
 		)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
@@ -294,7 +253,7 @@ func (c *AuthController) refresh(
 	if claims.JTI != tf.LastIssued {
 		slog.Warn("invalid last issued for refresh token", "token", rq.RefreshToken)
 		// TODO: Add revoke here
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
@@ -310,7 +269,7 @@ func (c *AuthController) refresh(
 	refreshString, tokenString, expRT, err := c.th.
 		GenerateTokens(&now, tf.Sub, tf.Id, jtiRT)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		internalServerError(w)
 		return
 	}
 
@@ -322,10 +281,10 @@ func (c *AuthController) refresh(
 	c.tfr.UpdateToken(r.Context(), tf)
 
 	// Send new tokens
-	json.NewEncoder(w).Encode(&TokenResponse{
+	respondWithJSON(w, &TokenResponse{
 		AccessToken:  tokenString,
 		RefreshToken: refreshString,
-	})
+	}, http.StatusOK)
 }
 
 func (c *AuthController) validate(w http.ResponseWriter, r *http.Request) {
@@ -334,15 +293,15 @@ func (c *AuthController) validate(w http.ResponseWriter, r *http.Request) {
 	token, err := c.th.VerifyToken(tokenString)
 	if err != nil {
 		slog.Info("token verification failed", "error", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		unauthorized(w)
 		return
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		json.NewEncoder(w).Encode(claims)
+		respondWithJSON(w, claims, http.StatusOK)
 	} else {
 		fmt.Println(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		internalServerError(w)
 		return
 	}
 }
