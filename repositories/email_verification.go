@@ -23,12 +23,14 @@ func (r *EmailVerificationRepository) InsertEmailVerificationRequest(
 	m *models.EmailVerificationRequest,
 ) error {
 	query := `insert into email_verification_requests (
-		register_request_id, email, token, revoked, accepted, expires_at, created_at
+		id, register_request_id, email, token, revoked, accepted, expires_at,
+		created_at
 	) values (
-		@register_request_id, @email, @token, @revoked, @accepted, @expires_at,
+		@id, @register_request_id, @email, @token, @revoked, @accepted, @expires_at,
 		@created_at
 	)`
 	args := pgx.NamedArgs{
+		"id":                  m.Id,
 		"register_request_id": m.RegisterRequestId,
 		"email":               m.Email,
 		"token":               m.Token,
@@ -67,4 +69,67 @@ func (
 	}
 
 	return &result, err
+}
+
+func (
+	r *EmailVerificationRepository,
+) GetEmailVerificationRequestById(
+	ctx context.Context,
+	id string,
+) (*models.EmailVerificationRequest, error) {
+	query := `select * from email_verification_requests where id = @id`
+	args := pgx.NamedArgs{"id": id}
+
+	rows, err := r.db.Query(ctx, query, args)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := pgx.CollectOneRow(
+		rows,
+		pgx.RowToStructByNameLax[models.EmailVerificationRequest],
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, err
+}
+
+func (
+	r *EmailVerificationRepository,
+) Revoke(
+	ctx context.Context,
+	m *models.EmailVerificationRequest,
+) error {
+	query := `
+		update email_verification_requests
+		set revoked = true
+		where id = @id
+	`
+
+	args := pgx.NamedArgs{
+		"id": m.Id,
+	}
+
+	return r.db.Exec(ctx, query, args)
+}
+
+func (
+	r *EmailVerificationRepository,
+) Accept(
+	ctx context.Context,
+	m *models.EmailVerificationRequest,
+) error {
+	query := `
+		update email_verification_requests
+		set accepted = true
+		where id = @id
+	`
+
+	args := pgx.NamedArgs{
+		"id": m.Id,
+	}
+
+	return r.db.Exec(ctx, query, args)
 }

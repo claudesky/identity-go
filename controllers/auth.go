@@ -36,6 +36,10 @@ func NewAuthController(
 
 func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc(
+		"POST /auth/verify",
+		middleware.JSONDecoderMiddleware(c.verify),
+	)
+	mux.HandleFunc(
 		"POST /auth/register",
 		middleware.JSONDecoderMiddleware(c.register),
 	)
@@ -69,6 +73,19 @@ func (c *AuthController) register(
 	// Check existing user
 	if user, _ := c.ur.GetUserByEmail(r.Context(), *rq.Email); user != nil {
 		respondWithError(w, "User with email already exists", http.StatusConflict)
+		return
+	}
+
+	// Check existing registration request
+	if rr, _ := c.rrr.GetRegisterRequestByEmail(
+		r.Context(),
+		*rq.Email,
+	); rr != nil {
+		respondWithError(
+			w,
+			"Registration request with email already exists",
+			http.StatusConflict,
+		)
 		return
 	}
 
@@ -107,7 +124,7 @@ func (c *AuthController) register(
 	}
 
 	// Create Email Verification Request
-	_, err = c.evs.CreateEmailVerificationRequest(
+	evr, err := c.evs.CreateEmailVerificationRequest(
 		r.Context(),
 		registerRequest.Id,
 		*registerRequest.Email,
@@ -124,7 +141,42 @@ func (c *AuthController) register(
 		return
 	}
 
-	respondWithMessage(w, "Registration Request received.", http.StatusCreated)
+	respondWithDataMessage(
+		w,
+		"Registration Request received.",
+		http.StatusCreated,
+		&struct {
+			EmailVerificationRequest *models.EmailVerificationRequest `json:"email_verification_request"`
+		}{
+			EmailVerificationRequest: evr,
+		},
+	)
+}
+
+func (c *AuthController) verify(
+	w http.ResponseWriter,
+	r *http.Request,
+	rq *VerificationRequest,
+) {
+	// Validation
+	if err := rq.validate(); err != nil {
+		respondWithError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Verify the token
+	msg, ok, err := c.evs.
+		VerifyEmailVerificationRequest(r.Context(), *rq.Id, *rq.Token)
+	if err != nil {
+		// insert better slog error logging here
+		internalServerError(w)
+		return
+	} else if !ok {
+		respondWithError(w, msg, http.StatusUnprocessableEntity)
+		return
+	}
+
+	respondWithMessage(w, "verification success", http.StatusOK)
 }
 
 func (c *AuthController) login(

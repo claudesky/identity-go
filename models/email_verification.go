@@ -4,18 +4,22 @@ import (
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/claudesky/identity-go/utils"
 )
 
 type EmailVerificationRequest struct {
-	RegisterRequestId *string   `json:"register_request_id"`
+	Id                string    `json:"id"`
+	RegisterRequestId *string   `json:"-"`
 	Email             *string   `json:"email"`
-	Token             *string   `json:"token"`
-	Accepted          bool      `json:"accepted"`
-	Revoked           bool      `json:"revoked"`
+	Token             *string   `json:"-"`
+	Accepted          bool      `json:"-"`
+	Revoked           bool      `json:"-"`
 	ExpiresAt         time.Time `json:"expires_at"`
 	CreatedAt         time.Time `json:"created_at"`
 }
 
+// Default 5 min expiry
 var evrExpiry = time.Minute * 5
 
 func NewEmailVerificationRequest(
@@ -26,6 +30,7 @@ func NewEmailVerificationRequest(
 	now := time.Now()
 
 	return &EmailVerificationRequest{
+		Id:                utils.PseudoUUID(),
 		RegisterRequestId: &rrid,
 		Email:             &email,
 		Token:             &code,

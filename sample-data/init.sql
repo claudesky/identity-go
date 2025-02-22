@@ -31,6 +31,7 @@ create table token_families (
 );
 
 create table email_verification_requests (
+    id uuid primary key,
     register_request_id uuid not null,
     email text not null,
     token text not null,

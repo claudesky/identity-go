@@ -18,6 +18,11 @@ type RegisterRequest struct {
 	LoginRequest
 }
 
+type VerificationRequest struct {
+	Id    *string `json:"id"`
+	Token *string `json:"token"`
+}
+
 type RefreshRequest struct {
 	RefreshToken *string `json:"refresh_token"`
 }
@@ -30,6 +35,12 @@ type TokenResponse struct {
 type Message struct {
 	Message string `json:"message"`
 	Status  int    `json:"status"`
+}
+
+type DataMessage struct {
+	Message string `json:"message"`
+	Status  int    `json:"status"`
+	Data    any    `json:"data"`
 }
 
 type ErrorMessage struct {
@@ -58,6 +69,16 @@ func (rq *LoginRequest) validate() error {
 	}
 	if rq.Password == nil {
 		return errors.New("[password] is required")
+	}
+	return nil
+}
+
+func (rq VerificationRequest) validate() error {
+	if rq.Id == nil {
+		return errors.New("[id] is required")
+	}
+	if rq.Token == nil {
+		return errors.New("[token] is required")
 	}
 	return nil
 }

@@ -54,6 +54,8 @@ func main() {
 	)
 	emailVerificationService := services.NewEmailVerification(
 		emailVerificationRepository,
+		registerRequestRepository,
+		userRepository,
 		mail,
 	)
 

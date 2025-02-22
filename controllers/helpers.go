@@ -25,6 +25,19 @@ func respondWithMessage(w http.ResponseWriter, message string, statusCode int) {
 	respondWithJSON(w, &Message{Message: message, Status: statusCode}, statusCode)
 }
 
+func respondWithDataMessage(
+	w http.ResponseWriter,
+	message string,
+	statusCode int,
+	data any,
+) {
+	respondWithJSON(w, &DataMessage{
+		Message: message,
+		Status:  statusCode,
+		Data:    data,
+	}, statusCode)
+}
+
 // -- Preset Responses
 
 func internalServerError(w http.ResponseWriter) {
