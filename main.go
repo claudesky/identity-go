@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/claudesky/identity-go/controllers"
 	"github.com/claudesky/identity-go/database"
@@ -15,6 +16,9 @@ import (
 )
 
 func main() {
+	// Configure timezone to UTC
+	time.Local = time.UTC
+
 	// Configure structured logging
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)

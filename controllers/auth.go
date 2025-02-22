@@ -91,7 +91,7 @@ func (c *AuthController) register(
 		Id:        utils.PseudoUUID(),
 		Email:     rq.Email,
 		Password:  &hashedPassword,
-		CreatedAt: time.Now().UTC(),
+		CreatedAt: time.Now(),
 	}
 	err = c.rrr.InsertRegisterRequest(r.Context(), registerRequest)
 	if err != nil {
@@ -189,9 +189,9 @@ func (c *AuthController) login(
 		Id:           jtf,
 		Sub:          user.Id,
 		LastIssued:   jtf,
-		CreatedAt:    now.UTC(),
-		LastIssuedAt: now.UTC(),
-		ExpiresAt:    expRT.UTC(),
+		CreatedAt:    now,
+		LastIssuedAt: now,
+		ExpiresAt:    expRT,
 	})
 
 	respondWithJSON(w, &TokenResponse{
@@ -275,8 +275,8 @@ func (c *AuthController) refresh(
 
 	// Update Token Family
 	tf.LastIssued = jtiRT
-	tf.LastIssuedAt = now.UTC()
-	tf.ExpiresAt = expRT.UTC()
+	tf.LastIssuedAt = now
+	tf.ExpiresAt = expRT
 
 	c.tfr.UpdateToken(r.Context(), tf)
 
