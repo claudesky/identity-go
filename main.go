@@ -61,12 +61,17 @@ func main() {
 	healthController := controllers.NewHealthController()
 	healthController.RegisterRoutes(mux)
 
-	authController := controllers.NewAuthController(
-		tokenHandler,
+	registerController := controllers.NewRegisterController(
 		emailVerificationService,
 		userRepository,
-		tokenFamilyRepository,
 		registerRequestRepository,
+	)
+	registerController.RegisterRoutes(mux)
+
+	authController := controllers.NewAuthController(
+		tokenHandler,
+		userRepository,
+		tokenFamilyRepository,
 	)
 	authController.RegisterRoutes(mux)
 
