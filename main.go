@@ -88,13 +88,6 @@ func main() {
 
 	// Start Server
 
-	// Send Init Email
-	if idg_send_init_email {
-		if err := mail.SendSystemEmailSimple("admin@example.org", "test", "server init"); err != nil {
-			slog.Warn("Initialization Email Error", "error", err.Error())
-		}
-	}
-
 	slog.Info("server init")
 	log.Fatal(http.ListenAndServe(idg_port, middleware.ContentTypeJson(mux)))
 }
