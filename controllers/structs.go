@@ -27,6 +27,10 @@ type RefreshRequest struct {
 	RefreshToken *string `json:"refresh_token"`
 }
 
+type ResendVerificationRequest struct {
+	Email *string `json:"email"`
+}
+
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -86,6 +90,16 @@ func (rq VerificationRequest) validate() error {
 func (rq *RefreshRequest) validate() error {
 	if rq.RefreshToken == nil {
 		return errors.New("[refresh_token] is required")
+	}
+	return nil
+}
+
+func (rq *ResendVerificationRequest) validate() error {
+	if rq.Email == nil {
+		return errors.New("[email] is required")
+	}
+	if _, err := mail.ParseAddress(*rq.Email); err != nil {
+		return errors.New("[email] must be a valid email address")
 	}
 	return nil
 }

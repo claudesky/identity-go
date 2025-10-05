@@ -11,5 +11,6 @@ type EmailVerificationRepository interface {
 	GetEmailVerificationRequestsByRegisterRequestId(ctx context.Context, id string) (*[]models.EmailVerificationRequest, error)
 	GetEmailVerificationRequestById(ctx context.Context, id string) (*models.EmailVerificationRequest, error)
 	Revoke(ctx context.Context, m *models.EmailVerificationRequest) error
+	RevokeAllByRegisterRequestId(ctx context.Context, registerRequestId string) error
 	Accept(ctx context.Context, m *models.EmailVerificationRequest) error
 }

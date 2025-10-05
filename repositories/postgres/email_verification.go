@@ -117,6 +117,27 @@ func (
 
 func (
 	r *EmailVerificationRepository,
+) RevokeAllByRegisterRequestId(
+	ctx context.Context,
+	registerRequestId string,
+) error {
+	query := `
+		update email_verification_requests
+		set revoked = true
+		where register_request_id = @register_request_id
+		and revoked = false
+		and accepted = false
+	`
+
+	args := pgx.NamedArgs{
+		"register_request_id": registerRequestId,
+	}
+
+	return r.db.Exec(ctx, query, args)
+}
+
+func (
+	r *EmailVerificationRepository,
 ) Accept(
 	ctx context.Context,
 	m *models.EmailVerificationRequest,

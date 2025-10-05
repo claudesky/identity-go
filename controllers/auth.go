@@ -44,6 +44,10 @@ func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
 		middleware.JSONDecoderMiddleware(c.register),
 	)
 	mux.HandleFunc(
+		"POST /auth/resend",
+		middleware.JSONDecoderMiddleware(c.resend),
+	)
+	mux.HandleFunc(
 		"POST /auth/login",
 		middleware.JSONDecoderMiddleware(c.login),
 	)
@@ -145,6 +149,49 @@ func (c *AuthController) register(
 		w,
 		"Registration Request received.",
 		http.StatusCreated,
+		&struct {
+			EmailVerificationRequest *models.EmailVerificationRequest `json:"email_verification_request"`
+		}{
+			EmailVerificationRequest: evr,
+		},
+	)
+}
+
+func (c *AuthController) resend(
+	w http.ResponseWriter,
+	r *http.Request,
+	rq *ResendVerificationRequest,
+) {
+	// Validation
+	if err := rq.validate(); err != nil {
+		respondWithError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Check if user already exists
+	if user, _ := c.ur.GetUserByEmail(r.Context(), *rq.Email); user != nil {
+		respondWithError(w, "User with email already exists", http.StatusConflict)
+		return
+	}
+
+	// Resend verification email
+	evr, err := c.evs.ResendEmailVerificationRequest(r.Context(), *rq.Email)
+	if err != nil {
+		slog.Error(
+			"failed to resend email verification",
+			"error",
+			err.Error(),
+			"email",
+			rq.Email,
+		)
+		internalServerError(w)
+		return
+	}
+
+	respondWithDataMessage(
+		w,
+		"Verification email resent.",
+		http.StatusOK,
 		&struct {
 			EmailVerificationRequest *models.EmailVerificationRequest `json:"email_verification_request"`
 		}{

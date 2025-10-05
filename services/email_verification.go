@@ -54,6 +54,32 @@ func (c *EmailVerification) CreateEmailVerificationRequest(
 	return evr, nil
 }
 
+func (c *EmailVerification) ResendEmailVerificationRequest(
+	ctx context.Context,
+	email string,
+) (*models.EmailVerificationRequest, error) {
+	// Look up the register request by email
+	rr, err := c.rr.GetRegisterRequestByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Revoke all previous valid verification requests
+	if err := c.evr.RevokeAllByRegisterRequestId(ctx, rr.Id); err != nil {
+		slog.Error(
+			"Failed to revoke previous verification requests",
+			"error",
+			err.Error(),
+			"register_request_id",
+			rr.Id,
+		)
+		return nil, err
+	}
+
+	// Create and send new verification request
+	return c.CreateEmailVerificationRequest(ctx, rr.Id, email)
+}
+
 func (c *EmailVerification) VerifyEmailVerificationRequest(
 	ctx context.Context,
 	id string,
