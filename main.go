@@ -11,7 +11,7 @@ import (
 	"github.com/claudesky/identity-go/controllers"
 	"github.com/claudesky/identity-go/database"
 	"github.com/claudesky/identity-go/middleware"
-	"github.com/claudesky/identity-go/repositories"
+	"github.com/claudesky/identity-go/repositories/postgres"
 	"github.com/claudesky/identity-go/services"
 )
 
@@ -24,7 +24,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	// Init Database
-	database, err := database.NewDatabase(
+	db, err := database.NewPostgresDatabase(
 		context.Background(),
 		idg_db_conn,
 		&idg_db_pass,
@@ -34,14 +34,10 @@ func main() {
 	}
 
 	// Init Repositories
-	userRepository := repositories.NewUserRepository(database)
-	tokenFamilyRepository := repositories.NewTokenFamilyRepository(database)
-	registerRequestRepository := repositories.NewRegisterRequestRepository(
-		database,
-	)
-	emailVerificationRepository := repositories.NewEmailVerificationRepository(
-		database,
-	)
+	userRepository := postgres.NewUserRepository(db)
+	tokenFamilyRepository := postgres.NewTokenFamilyRepository(db)
+	registerRequestRepository := postgres.NewRegisterRequestRepository(db)
+	emailVerificationRepository := postgres.NewEmailVerificationRepository(db)
 
 	// Init Services
 	tokenHandler := services.NewTokenHandler(idg_pkey, idg_pubkey)

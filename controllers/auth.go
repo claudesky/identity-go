@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/claudesky/identity-go/interfaces/repositories"
 	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/models"
-	"github.com/claudesky/identity-go/repositories"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
 	"github.com/golang-jwt/jwt/v5"
@@ -19,17 +19,17 @@ import (
 type AuthController struct {
 	th  *services.TokenHandler
 	evs *services.EmailVerification
-	ur  *repositories.UserRepository
-	tfr *repositories.TokenFamilyRepository
-	rrr *repositories.RegisterRequestRepository
+	ur  repositories.UserRepository
+	tfr repositories.TokenFamilyRepository
+	rrr repositories.RegisterRequestRepository
 }
 
 func NewAuthController(
 	th *services.TokenHandler,
 	evs *services.EmailVerification,
-	ur *repositories.UserRepository,
-	tfr *repositories.TokenFamilyRepository,
-	rrr *repositories.RegisterRequestRepository,
+	ur repositories.UserRepository,
+	tfr repositories.TokenFamilyRepository,
+	rrr repositories.RegisterRequestRepository,
 ) *AuthController {
 	return &AuthController{th, evs, ur, tfr, rrr}
 }

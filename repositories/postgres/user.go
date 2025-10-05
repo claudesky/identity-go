@@ -1,18 +1,18 @@
-package repositories
+package postgres
 
 import (
 	"context"
 
-	"github.com/claudesky/identity-go/database"
+	"github.com/claudesky/identity-go/interfaces/database"
 	"github.com/claudesky/identity-go/models"
 	"github.com/jackc/pgx/v5"
 )
 
 type UserRepository struct {
-	db *database.Database
+	db database.Database
 }
 
-func NewUserRepository(db *database.Database) *UserRepository {
+func NewUserRepository(db database.Database) *UserRepository {
 	return &UserRepository{db}
 }
 

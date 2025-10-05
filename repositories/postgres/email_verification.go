@@ -1,19 +1,19 @@
-package repositories
+package postgres
 
 import (
 	"context"
 
-	"github.com/claudesky/identity-go/database"
+	"github.com/claudesky/identity-go/interfaces/database"
 	"github.com/claudesky/identity-go/models"
 	"github.com/jackc/pgx/v5"
 )
 
 type EmailVerificationRepository struct {
-	db *database.Database
+	db database.Database
 }
 
 func NewEmailVerificationRepository(
-	db *database.Database,
+	db database.Database,
 ) *EmailVerificationRepository {
 	return &EmailVerificationRepository{db}
 }

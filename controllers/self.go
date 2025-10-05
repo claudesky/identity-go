@@ -6,20 +6,20 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/claudesky/identity-go/repositories"
+	"github.com/claudesky/identity-go/interfaces/repositories"
 	"github.com/claudesky/identity-go/services"
 )
 
 type SelfController struct {
 	th  *services.TokenHandler
-	ur  *repositories.UserRepository
-	tfr *repositories.TokenFamilyRepository
+	ur  repositories.UserRepository
+	tfr repositories.TokenFamilyRepository
 }
 
 func NewSelfController(
 	th *services.TokenHandler,
-	ur *repositories.UserRepository,
-	tfr *repositories.TokenFamilyRepository,
+	ur repositories.UserRepository,
+	tfr repositories.TokenFamilyRepository,
 ) *SelfController {
 	return &SelfController{th, ur, tfr}
 }

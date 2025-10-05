@@ -1,18 +1,18 @@
-package repositories
+package postgres
 
 import (
 	"context"
 
-	"github.com/claudesky/identity-go/database"
+	"github.com/claudesky/identity-go/interfaces/database"
 	"github.com/claudesky/identity-go/models"
 	"github.com/jackc/pgx/v5"
 )
 
 type TokenFamilyRepository struct {
-	db *database.Database
+	db database.Database
 }
 
-func NewTokenFamilyRepository(db *database.Database) *TokenFamilyRepository {
+func NewTokenFamilyRepository(db database.Database) *TokenFamilyRepository {
 	return &TokenFamilyRepository{db}
 }
 

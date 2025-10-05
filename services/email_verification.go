@@ -6,21 +6,21 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/claudesky/identity-go/interfaces/repositories"
 	"github.com/claudesky/identity-go/models"
-	"github.com/claudesky/identity-go/repositories"
 )
 
 type EmailVerification struct {
-	evr  *repositories.EmailVerificationRepository
-	rr   *repositories.RegisterRequestRepository
-	ur   *repositories.UserRepository
+	evr  repositories.EmailVerificationRepository
+	rr   repositories.RegisterRequestRepository
+	ur   repositories.UserRepository
 	mail *Mail
 }
 
 func NewEmailVerification(
-	evr *repositories.EmailVerificationRepository,
-	rr *repositories.RegisterRequestRepository,
-	ur *repositories.UserRepository,
+	evr repositories.EmailVerificationRepository,
+	rr repositories.RegisterRequestRepository,
+	ur repositories.UserRepository,
 	mail *Mail,
 ) *EmailVerification {
 	return &EmailVerification{evr, rr, ur, mail}

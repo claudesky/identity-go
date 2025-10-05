@@ -8,20 +8,20 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Database struct {
+type PostgresDatabase struct {
 	pool *pgxpool.Pool
 }
 
 var (
-	db   *Database
+	db   *PostgresDatabase
 	once sync.Once
 )
 
-func NewDatabase(
+func NewPostgresDatabase(
 	ctx context.Context,
 	cstr string,
 	pass *string,
-) (*Database, error) {
+) (*PostgresDatabase, error) {
 	var err error
 	once.Do(func() {
 		var conf *pgxpool.Config
@@ -46,7 +46,7 @@ func NewDatabase(
 			return
 		}
 
-		db = &Database{pool}
+		db = &PostgresDatabase{pool}
 
 		err = db.Ping(ctx)
 	})
@@ -54,15 +54,15 @@ func NewDatabase(
 	return db, err
 }
 
-func (d *Database) Ping(ctx context.Context) error {
+func (d *PostgresDatabase) Ping(ctx context.Context) error {
 	return d.pool.Ping(ctx)
 }
 
-func (d *Database) Close() {
+func (d *PostgresDatabase) Close() {
 	d.pool.Close()
 }
 
-func (d *Database) Query(
+func (d *PostgresDatabase) Query(
 	ctx context.Context,
 	sql string,
 	args any,
@@ -74,7 +74,7 @@ func (d *Database) Query(
 	return
 }
 
-func (d *Database) QueryRow(
+func (d *PostgresDatabase) QueryRow(
 	ctx context.Context,
 	sql string,
 	args any,
@@ -85,7 +85,7 @@ func (d *Database) QueryRow(
 	return
 }
 
-func (d *Database) Exec(
+func (d *PostgresDatabase) Exec(
 	ctx context.Context,
 	sql string,
 	args any,
