@@ -9,10 +9,15 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
+const emailInput = ref<HTMLInputElement | null>(null)
 
 const { signIn } = useAuthAPI()
 const { setUser } = useAuth()
 const router = useRouter()
+
+onMounted(() => {
+  emailInput.value?.focus()
+})
 
 const handleSubmit = async () => {
   error.value = ''
@@ -51,6 +56,7 @@ const handleSubmit = async () => {
             <div class="form-group">
               <label for="email">Email</label>
               <input
+                ref="emailInput"
                 type="email"
                 id="email"
                 v-model="email"
