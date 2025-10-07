@@ -5,6 +5,10 @@ definePageMeta({
   middleware: 'guest'
 })
 
+useHead({
+  title: 'Sign Up'
+})
+
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')

@@ -1,16 +1,20 @@
 <script setup lang="ts">
+const config = useRuntimeConfig()
 
 definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'Support'
+})
 </script>
 
 <template>
   <div>
     <AppNav />
     <main>
-      <h1>Welcome to Identity - Go</h1>
+      <h1>Welcome to {{ config.public.appName }}</h1>
       <sub>Support Page</sub>
     </main>
   </div>

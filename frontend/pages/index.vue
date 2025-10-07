@@ -1,16 +1,16 @@
 <script setup lang="ts">
+const config = useRuntimeConfig()
 
 definePageMeta({
   middleware: 'guest'
 })
-
 </script>
 
 <template>
   <div>
     <AppNav />
     <main>
-      <h1>Welcome to Identity - Go</h1>
+      <h1>Welcome to {{ config.public.appName }}</h1>
       <sub>An Oauth Identity Provider in Golang</sub>
     </main>
   </div>

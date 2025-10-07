@@ -13,13 +13,13 @@ export default defineNuxtConfig({
     head: {
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-      title: 'Identity - Go'
     }
   },
 
   runtimeConfig: {
     public: {
-      apiBaseURL: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:9102'
+      apiBaseURL: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:9102',
+      appName: process.env.NUXT_PUBLIC_APP_NAME || 'Identity - Go'
     }
   }
 })

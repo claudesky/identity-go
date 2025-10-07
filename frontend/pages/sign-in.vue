@@ -2,7 +2,11 @@
 import { useAuthAPI } from '~/lib/api/auth-api'
 
 definePageMeta({
-  middleware: 'guest'
+  middleware: 'guest',
+})
+
+useHead({
+  title: 'Sign In'
 })
 
 const email = ref('')
