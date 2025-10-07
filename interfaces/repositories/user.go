@@ -7,6 +7,7 @@ import (
 )
 
 type UserRepository interface {
+	GetUserById(ctx context.Context, id string) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	InsertUser(ctx context.Context, m *models.User) error
 }

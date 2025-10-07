@@ -55,6 +55,7 @@ func (th *TokenHandler) GenerateTokens(
 	sub string,
 	jtf string,
 	jtiRT string,
+	additionalClaims jwt.MapClaims,
 ) (
 	refreshString string,
 	tokenString string,
@@ -79,14 +80,21 @@ func (th *TokenHandler) GenerateTokens(
 		return
 	}
 
-	tokenString, err = th.SignToken(jwt.MapClaims{
+	// Build access token claims
+	accessClaims := jwt.MapClaims{
 		"jti": utils.PseudoUUID(),
 		"jtf": jtf,
 		"jtp": jtf,
 		"sub": sub,
 		"exp": expAT.Unix(),
 		"typ": "access_token",
-	})
+	}
+	// Merge additional claims
+	for k, v := range additionalClaims {
+		accessClaims[k] = v
+	}
+
+	tokenString, err = th.SignToken(accessClaims)
 	if err != nil {
 		slog.Info("access token signing failed", "error", err)
 		return

@@ -16,6 +16,29 @@ func NewUserRepository(db database.Database) *UserRepository {
 	return &UserRepository{db}
 }
 
+func (r *UserRepository) GetUserById(
+	ctx context.Context,
+	id string,
+) (
+	*models.User,
+	error,
+) {
+	query := `select * from users where id = @id`
+	args := pgx.NamedArgs{"id": id}
+
+	rows, err := r.db.Query(ctx, query, args)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.User])
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, err
+}
+
 func (r *UserRepository) GetUserByEmail(
 	ctx context.Context,
 	email string,

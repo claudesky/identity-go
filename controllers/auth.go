@@ -99,6 +99,11 @@ func (c *AuthController) login(
 		user.Id,
 		jtf,
 		jtf,
+		// wonder how we would deal with custom claims in future
+		jwt.MapClaims{
+			"name":  user.Name,
+			"email": user.Email,
+		},
 	)
 	if err != nil {
 		internalServerError(w)
@@ -177,6 +182,19 @@ func (c *AuthController) refresh(
 		return
 	}
 
+	user, err := c.ur.GetUserById(r.Context(), claims.SUB)
+	if err != nil {
+		slog.Warn(
+			"could not user id",
+			"user id",
+			claims.SUB,
+			"error",
+			err,
+		)
+		unauthorized(w)
+		return
+	}
+
 	// Possible future checks
 	// ...
 
@@ -187,7 +205,11 @@ func (c *AuthController) refresh(
 
 	// Generate new tokens
 	refreshString, tokenString, expRT, err := c.th.
-		GenerateTokens(&now, tf.Sub, tf.Id, jtiRT)
+		GenerateTokens(&now, tf.Sub, tf.Id, jtiRT,
+			jwt.MapClaims{
+				"name":  user.Name,
+				"email": user.Email,
+			})
 	if err != nil {
 		internalServerError(w)
 		return
