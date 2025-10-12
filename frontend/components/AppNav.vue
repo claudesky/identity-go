@@ -14,6 +14,7 @@ const handleLogout = async () => {
       <template v-if="isAuthenticated">
         <li><NuxtLink to="/dashboard">Dashboard</NuxtLink></li>
         <li><NuxtLink to="/support">Support</NuxtLink></li>
+        <li><NuxtLink to="/profile/sessions">Sessions</NuxtLink></li>
       </template>
       <li v-else><NuxtLink to="/">Home</NuxtLink></li>
       <li class="spacer"></li>

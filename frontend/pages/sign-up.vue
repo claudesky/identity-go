@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAuthAPI } from '~/lib/api/auth-api'
 
 definePageMeta({
   middleware: 'guest'
@@ -12,17 +11,15 @@ useHead({
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
-const firstName = ref('')
-const lastName = ref('')
+const name = ref('')
 const error = ref('')
 const loading = ref(false)
 
-const { signUp } = useAuthAPI()
-const { setUser } = useAuth()
+const { setUser, register } = useAuth()
 const router = useRouter()
 
 const validateForm = (): boolean => {
-  if (!firstName.value || !lastName.value || !email.value || !password.value || !confirmPassword.value) {
+  if (!name.value || !email.value || !password.value || !confirmPassword.value) {
     error.value = 'Please fill in all fields'
     return false
   }
@@ -50,19 +47,12 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    const response = await signUp({
-      firstName: firstName.value,
-      lastName: lastName.value,
+    const response = await register({
+      name: name.value,
       email: email.value,
       password: password.value
     })
 
-    if (response.user) {
-      setUser(response.user)
-      await router.push('/')
-    } else {
-      error.value = response.message || 'Sign up failed'
-    }
   } catch (err: any) {
     error.value = err.data?.message || err.message || 'Sign up failed'
   } finally {
@@ -83,24 +73,13 @@ const handleSubmit = async () => {
           <form @submit.prevent="handleSubmit">
             <div class="form-row">
               <div class="form-group">
-                <label for="firstName">First Name</label>
+                <label for="name">Name</label>
                 <input
                   type="text"
-                  id="firstName"
-                  v-model="firstName"
+                  id="name"
+                  v-model="name"
                   required
                   autocomplete="given-name"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="lastName">Last Name</label>
-                <input
-                  type="text"
-                  id="lastName"
-                  v-model="lastName"
-                  required
-                  autocomplete="family-name"
                 />
               </div>
             </div>

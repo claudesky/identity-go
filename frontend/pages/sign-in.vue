@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useAuthAPI } from '~/lib/api/auth-api'
 
 definePageMeta({
   middleware: 'guest',
@@ -15,8 +14,7 @@ const error = ref('')
 const loading = ref(false)
 const emailInput = ref<HTMLInputElement | null>(null)
 
-const { signIn } = useAuthAPI()
-const { setUser } = useAuth()
+const { login } = useAuth()
 const router = useRouter()
 
 onMounted(() => {
@@ -28,17 +26,12 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    const response = await signIn({
+    await login({
       email: email.value,
       password: password.value
     })
 
-    if (response.user) {
-      setUser(response.user)
-      await router.push('/dashboard')
-    } else {
-      error.value = response.message || 'Sign in failed'
-    }
+    await router.push('/dashboard')
   } catch (err: any) {
     error.value = err.data?.message || err.message || 'Sign in failed'
   } finally {

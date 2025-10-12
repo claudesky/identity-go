@@ -1,3 +1,6 @@
+import type { SignUpRequest, SignInRequest } from '../lib/request'
+import { useSelf } from './useSelf'
+
 export interface User {
   id: string
   email: string
@@ -7,21 +10,20 @@ export interface User {
 
 export const useAuth = () => {
   const user = useState<User | null>('user', () => null)
-  const accessToken = useCookie('identity_access_token', {
-    maxAge: 60 * 15, // 15 minutes
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true
-  })
-  const refreshToken = useCookie('identity_refresh_token', {
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true
-  })
+  const { accessToken, clearTokens } = useTokens()
+  const { getSelf } = useSelf()
 
   const setUser = (userData: User | null) => {
     user.value = userData
+  }
+
+  const loadSelf = async () => {
+    const response = await getSelf()
+
+    if (response.data.value === null) return false
+
+    user.value = response.data.value.data
+    return true
   }
 
   const validateToken = async (): Promise<boolean> => {
@@ -30,44 +32,28 @@ export const useAuth = () => {
       return false
     }
 
-    try {
-      const response = await $fetch<{ user?: User }>('/api/auth/validate', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken.value}`
-        }
-      })
-      // TODO: add a self endpoint somewhere
-      if (response) {
-        user.value = {
-          id: '1234',
-          email: 'test',
-          firstName: 'test',
-          lastName: 'test',
-        }
-        return true
-      } else {
-        user.value = null
-        return false
-      }
-    } catch (error) {
-      console.error('Token validation failed:', error)
-      user.value = null
-      return false
-    }
+    return loadSelf()
+  }
+
+  const register = async (data: SignUpRequest) => {}
+
+  const login = async (data: SignInRequest) => {
+    await $fetch<void>('/api/auth/login', {
+      method: 'POST',
+      body: data,
+    })
+
+    return loadSelf()
   }
 
   const logout = async () => {
     try {
       await $fetch('/api/auth/logout', {
-        method: 'POST'
+        method: 'POST',
       })
-    } catch (error) {
-      console.error('Logout failed:', error)
     } finally {
       user.value = null
-      accessToken.value = null
-      refreshToken.value = null
+      clearTokens()
     }
   }
 
@@ -75,7 +61,9 @@ export const useAuth = () => {
     user: readonly(user),
     setUser,
     validateToken,
+    register,
+    login,
     logout,
-    isAuthenticated: computed(() => !!user.value)
+    isAuthenticated: computed(() => !!user.value),
   }
 }
