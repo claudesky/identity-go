@@ -24,6 +24,19 @@ func NewSelfController(
 	return &SelfController{th, ur, tfr}
 }
 
+func (c *SelfController) Self(w http.ResponseWriter, r *http.Request) {
+	sub := middleware.GetSubject(r)
+
+	user, err := c.ur.GetUserById(r.Context(), sub)
+	if err != nil {
+		slog.Warn("failed to get user by id", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
+}
+
 func (c *SelfController) Sessions(w http.ResponseWriter, r *http.Request) {
 	sub := middleware.GetSubject(r)
 

@@ -133,7 +133,11 @@ func (c *EmailVerification) VerifyEmailVerificationRequest(
 		return
 	}
 
-	err = c.ur.InsertUser(ctx, models.NewUser(*rr.Password, *rr.Email))
+	newUser := models.NewUser(*rr.Password, *rr.Email)
+	now := time.Now()
+	newUser.EmailVerifiedOn = &now
+
+	err = c.ur.InsertUser(ctx, newUser)
 	if err != nil {
 		return
 	}

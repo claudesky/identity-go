@@ -47,6 +47,7 @@ func registerRoutes(
 	protected := middleware.NewGroup().
 		Use(middleware.AuthMiddleware(tokenHandler)).
 		Route("GET /self/sessions", selfController.Sessions).
+		Route("GET /self", selfController.Self).
 		Route("GET /auth/validate", authController.Validate)
 
 	protected.Handle(mux)

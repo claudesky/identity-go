@@ -67,14 +67,15 @@ func (r *UserRepository) InsertUser(
 	m *models.User,
 ) error {
 	query := `insert into users (
-		id, password, email
+		id, password, email, email_verified_on
 	) values (
-		@id, @password, @email
+		@id, @password, @email, @email_verified_on
 	)`
 	args := pgx.NamedArgs{
-		"id":       m.Id,
-		"password": m.Password,
-		"email":    m.Email,
+		"id":                m.Id,
+		"password":          m.Password,
+		"email":             m.Email,
+		"email_verified_on": m.EmailVerifiedOn,
 	}
 
 	return r.db.Exec(ctx, query, args)
