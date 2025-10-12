@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/claudesky/identity-go/interfaces/repositories"
-	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/models"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
@@ -26,24 +25,9 @@ func NewRegisterController(
 	return &RegisterController{evs, ur, rrr}
 }
 
-func (c *RegisterController) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc(
-		"POST /register",
-		middleware.JSONDecoderMiddleware(c.register),
-	)
-	mux.HandleFunc(
-		"POST /register/verify",
-		middleware.JSONDecoderMiddleware(c.verify),
-	)
-	mux.HandleFunc(
-		"POST /register/resend",
-		middleware.JSONDecoderMiddleware(c.resend),
-	)
-}
-
 // -- Controller Methods
 
-func (c *RegisterController) register(
+func (c *RegisterController) Register(
 	w http.ResponseWriter,
 	r *http.Request,
 	rq *RegisterRequest,
@@ -137,7 +121,7 @@ func (c *RegisterController) register(
 	)
 }
 
-func (c *RegisterController) resend(
+func (c *RegisterController) Resend(
 	w http.ResponseWriter,
 	r *http.Request,
 	rq *ResendVerificationRequest,
@@ -180,7 +164,7 @@ func (c *RegisterController) resend(
 	)
 }
 
-func (c *RegisterController) verify(
+func (c *RegisterController) Verify(
 	w http.ResponseWriter,
 	r *http.Request,
 	rq *VerificationRequest,

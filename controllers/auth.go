@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/claudesky/identity-go/interfaces/repositories"
-	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/models"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
@@ -30,24 +29,9 @@ func NewAuthController(
 	return &AuthController{th, ur, tfr}
 }
 
-func (c *AuthController) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc(
-		"POST /auth/login",
-		middleware.JSONDecoderMiddleware(c.login),
-	)
-	mux.HandleFunc(
-		"GET /auth/validate",
-		c.validate,
-	)
-	mux.HandleFunc(
-		"POST /auth/refresh",
-		middleware.JSONDecoderMiddleware(c.refresh),
-	)
-}
-
 // -- Controller Methods
 
-func (c *AuthController) login(
+func (c *AuthController) Login(
 	w http.ResponseWriter,
 	r *http.Request,
 	rq *LoginRequest,
@@ -125,7 +109,7 @@ func (c *AuthController) login(
 	}, http.StatusOK)
 }
 
-func (c *AuthController) refresh(
+func (c *AuthController) Refresh(
 	w http.ResponseWriter,
 	r *http.Request,
 	rq *RefreshRequest,
@@ -229,7 +213,7 @@ func (c *AuthController) refresh(
 	}, http.StatusOK)
 }
 
-func (c *AuthController) validate(w http.ResponseWriter, r *http.Request) {
+func (c *AuthController) Validate(w http.ResponseWriter, r *http.Request) {
 	tokenString := strings.Split(r.Header.Get("Authorization"), "Bearer ")[1]
 
 	token, err := c.th.VerifyToken(tokenString)

@@ -24,11 +24,7 @@ func NewSelfController(
 	return &SelfController{th, ur, tfr}
 }
 
-func (c *SelfController) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /self/sessions", c.sessions)
-}
-
-func (c *SelfController) sessions(w http.ResponseWriter, r *http.Request) {
+func (c *SelfController) Sessions(w http.ResponseWriter, r *http.Request) {
 	tokenString := strings.Split(r.Header.Get("Authorization"), "Bearer ")[1]
 
 	token, err := c.th.VerifyToken(tokenString)

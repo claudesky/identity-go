@@ -59,33 +59,33 @@ func main() {
 	mux := http.NewServeMux()
 
 	healthController := controllers.NewHealthController()
-	healthController.RegisterRoutes(mux)
 
 	registerController := controllers.NewRegisterController(
 		emailVerificationService,
 		userRepository,
 		registerRequestRepository,
 	)
-	registerController.RegisterRoutes(mux)
 
 	authController := controllers.NewAuthController(
 		tokenHandler,
 		userRepository,
 		tokenFamilyRepository,
 	)
-	authController.RegisterRoutes(mux)
 
 	selfController := controllers.NewSelfController(
 		tokenHandler,
 		userRepository,
 		tokenFamilyRepository,
 	)
-	selfController.RegisterRoutes(mux)
 
-	// Fallback Route
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Not Found", http.StatusNotFound)
-	})
+	// Register Routes
+	registerRoutes(
+		mux,
+		healthController,
+		registerController,
+		authController,
+		selfController,
+	)
 
 	// Start Server
 
