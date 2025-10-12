@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/claudesky/identity-go/interfaces/repositories"
+	"github.com/claudesky/identity-go/middleware"
 	"github.com/claudesky/identity-go/services"
 )
 
@@ -25,21 +25,7 @@ func NewSelfController(
 }
 
 func (c *SelfController) Sessions(w http.ResponseWriter, r *http.Request) {
-	tokenString := strings.Split(r.Header.Get("Authorization"), "Bearer ")[1]
-
-	token, err := c.th.VerifyToken(tokenString)
-	if err != nil {
-		slog.Info("token verification failed", "error", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	sub, err := token.Claims.GetSubject()
-	if err != nil {
-		slog.Warn("failed to get subject claim", "error", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	sub := middleware.GetSubject(r)
 
 	sessions, err := c.tfr.GetTokensBySub(r.Context(), sub)
 	if err != nil {

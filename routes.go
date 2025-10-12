@@ -5,6 +5,7 @@ import (
 
 	"github.com/claudesky/identity-go/controllers"
 	"github.com/claudesky/identity-go/middleware"
+	"github.com/claudesky/identity-go/services"
 )
 
 func registerRoutes(
@@ -13,6 +14,7 @@ func registerRoutes(
 	registerController *controllers.RegisterController,
 	authController *controllers.AuthController,
 	selfController *controllers.SelfController,
+	tokenHandler *services.TokenHandler,
 ) {
 	// Health routes
 	mux.HandleFunc("GET /health/check", healthController.Check)
@@ -37,16 +39,16 @@ func registerRoutes(
 		middleware.JSONDecoderMiddleware(authController.Login),
 	)
 	mux.HandleFunc(
-		"GET /auth/validate",
-		authController.Validate,
-	)
-	mux.HandleFunc(
 		"POST /auth/refresh",
 		middleware.JSONDecoderMiddleware(authController.Refresh),
 	)
 
-	// Self routes
-	mux.HandleFunc("GET /self/sessions", selfController.Sessions)
+	protected := middleware.NewGroup().
+		Use(middleware.AuthMiddleware(tokenHandler)).
+		Route("GET /self/sessions", selfController.Sessions).
+		Route("GET /auth/validate", authController.Validate)
+
+	protected.Handle(mux)
 
 	// Fallback Route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

@@ -85,6 +85,7 @@ func main() {
 		registerController,
 		authController,
 		selfController,
+		tokenHandler,
 	)
 
 	// Start Server
