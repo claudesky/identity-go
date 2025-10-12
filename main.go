@@ -91,5 +91,12 @@ func main() {
 	// Start Server
 
 	slog.Info("server init")
-	log.Fatal(http.ListenAndServe(idg_port, middleware.ContentTypeJson(mux)))
+	log.Fatal(
+		http.ListenAndServe(
+			idg_port,
+			middleware.TransactionMiddleware(db)(
+				middleware.ContentTypeJson(mux),
+			),
+		),
+	)
 }

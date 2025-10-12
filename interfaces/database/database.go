@@ -12,4 +12,7 @@ type Database interface {
 	Query(ctx context.Context, sql string, args any) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args any) pgx.Row
 	Exec(ctx context.Context, sql string, args any) error
+	BeginTransaction(ctx context.Context) (context.Context, error)
+	CommitTransaction(ctx context.Context) error
+	RollbackTransaction(ctx context.Context) error
 }

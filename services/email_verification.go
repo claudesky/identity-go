@@ -85,7 +85,7 @@ func (c *EmailVerification) VerifyEmailVerificationRequest(
 	id string,
 	token string,
 ) (msg string, ok bool, err error) {
-	ev, err := c.evr.GetEmailVerificationRequestById(ctx, id)
+	evr, err := c.evr.GetEmailVerificationRequestById(ctx, id)
 	if err != nil {
 		msg = "Token not found"
 		return
@@ -93,13 +93,13 @@ func (c *EmailVerification) VerifyEmailVerificationRequest(
 
 	// Check if invalid attempt was previously made
 	// and subsequently the verification request was revoked
-	if ev.Revoked {
+	if evr.Revoked {
 		msg = "Token is revoked"
 		return
 	}
 
 	// Check if already accepted
-	if ev.Accepted {
+	if evr.Accepted {
 		// no need to error out here, response should be OK and user should
 		// already be created
 		ok = true
@@ -107,31 +107,31 @@ func (c *EmailVerification) VerifyEmailVerificationRequest(
 	}
 
 	// Check if expired
-	if time.Now().After(ev.ExpiresAt) {
+	if time.Now().After(evr.ExpiresAt) {
 		msg = "Token is expired"
 		return
 	}
 
 	// Check if token matches
-	if *ev.Token != token {
+	if *evr.Token != token {
 		msg = "Token did not match"
 		// Revoke if not matching
-		c.evr.Revoke(ctx, ev)
+		c.evr.Revoke(ctx, evr)
 		return
 	}
 
 	// Everything OK
 	ok = true
 
-	rr, err := c.rr.GetRegisterRequestById(ctx, *ev.RegisterRequestId)
+	rr, err := c.rr.GetRegisterRequestById(ctx, *evr.RegisterRequestId)
 	if err != nil {
 		return
 	}
 
-	// Invalidate the RRR
-	// Probably also include a link to the created user?
-	// Revoke all remaining email verification requests as well.
-	// Can still return an error from here? If RRR was already revoked
+	err = c.evr.Accept(ctx, evr)
+	if err != nil {
+		return
+	}
 
 	err = c.ur.InsertUser(ctx, models.NewUser(*rr.Password, *rr.Email))
 	if err != nil {

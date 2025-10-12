@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 
 	"github.com/jackc/pgx/v5"
@@ -70,7 +71,12 @@ func (d *PostgresDatabase) Query(
 	rows pgx.Rows,
 	err error,
 ) {
-	rows, err = d.pool.Query(ctx, sql, args)
+	tx, ok := ctx.Value("transaction").(pgx.Tx)
+	if !ok {
+		rows, err = d.pool.Query(ctx, sql, args)
+		return
+	}
+	rows, err = tx.Query(ctx, sql, args)
 	return
 }
 
@@ -81,7 +87,12 @@ func (d *PostgresDatabase) QueryRow(
 ) (
 	row pgx.Row,
 ) {
-	row = d.pool.QueryRow(ctx, sql, args)
+	tx, ok := ctx.Value("transaction").(pgx.Tx)
+	if !ok {
+		row = d.pool.QueryRow(ctx, sql, args)
+		return
+	}
+	row = tx.QueryRow(ctx, sql, args)
 	return
 }
 
@@ -90,6 +101,48 @@ func (d *PostgresDatabase) Exec(
 	sql string,
 	args any,
 ) error {
-	_, err := d.pool.Exec(ctx, sql, args)
-	return err
+	tx, ok := ctx.Value("transaction").(pgx.Tx)
+	if !ok {
+		_, err := d.pool.Exec(ctx, sql, args)
+		return err
+	} else {
+		_, err := tx.Exec(ctx, sql, args)
+		return err
+	}
+}
+
+type contextKey string
+
+const transactionContextKey contextKey = "transaction"
+
+func (d *PostgresDatabase) BeginTransaction(
+	ctx context.Context,
+) (
+	nctx context.Context,
+	err error,
+) {
+	tx, err := d.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return
+	}
+
+	return context.WithValue(ctx, transactionContextKey, tx), nil
+}
+
+func (d *PostgresDatabase) CommitTransaction(ctx context.Context) error {
+	tx, ok := ctx.Value(transactionContextKey).(pgx.Tx)
+	if !ok {
+		slog.Warn("Transaction Commit called with no Transaction")
+		return nil // No transaction to commit
+	}
+	return tx.Commit(ctx)
+}
+
+func (d *PostgresDatabase) RollbackTransaction(ctx context.Context) error {
+	tx, ok := ctx.Value(transactionContextKey).(pgx.Tx)
+	if !ok {
+		slog.Warn("Transaction Rollback called with no Transaction")
+		return nil // No transaction to rollback
+	}
+	return tx.Rollback(ctx)
 }
