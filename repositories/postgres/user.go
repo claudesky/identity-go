@@ -67,6 +67,27 @@ func (r *UserRepository) GetUserByEmail(
 	return &result, err
 }
 
+func (r *UserRepository) GetAllUsers(
+	ctx context.Context,
+) (
+	[]*models.User,
+	error,
+) {
+	query := `select * from users order by id`
+
+	rows, err := r.db.Query(ctx, query, pgx.NamedArgs{})
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByNameLax[models.User])
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
 func (r *UserRepository) InsertUser(
 	ctx context.Context,
 	m *models.User,

@@ -15,6 +15,7 @@ func registerRoutes(
 	registerController *controllers.RegisterController,
 	authController *controllers.AuthController,
 	selfController *controllers.SelfController,
+	userController *controllers.UserController,
 	tokenHandler *services.TokenHandler,
 ) {
 	// Health routes
@@ -46,6 +47,8 @@ func registerRoutes(
 
 	protected := middleware.NewGroup().
 		Use(middleware.AuthMiddleware(tokenHandler)).
+		Route("GET /users", userController.Index).
+		Route("GET /users/{id}", userController.Show).
 		Route("GET /self/sessions", selfController.Sessions).
 		Route("GET /self", selfController.Self).
 		Route("GET /auth/validate", authController.Validate)

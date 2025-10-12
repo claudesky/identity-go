@@ -78,6 +78,10 @@ func main() {
 		tokenFamilyRepository,
 	)
 
+	userController := controllers.NewUserController(
+		userRepository,
+	)
+
 	// Register Routes
 	registerRoutes(
 		mux,
@@ -85,6 +89,7 @@ func main() {
 		registerController,
 		authController,
 		selfController,
+		userController,
 		tokenHandler,
 	)
 
