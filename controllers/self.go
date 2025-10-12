@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -30,11 +29,11 @@ func (c *SelfController) Self(w http.ResponseWriter, r *http.Request) {
 	user, err := c.ur.GetUserById(r.Context(), sub)
 	if err != nil {
 		slog.Warn("failed to get user by id", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		internalServerError(w)
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	respondWithData(w, "Success", user, 200)
 }
 
 func (c *SelfController) Sessions(w http.ResponseWriter, r *http.Request) {
@@ -43,9 +42,9 @@ func (c *SelfController) Sessions(w http.ResponseWriter, r *http.Request) {
 	sessions, err := c.tfr.GetTokensBySub(r.Context(), sub)
 	if err != nil {
 		slog.Warn("failed to get token families by subject", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		internalServerError(w)
 		return
 	}
 
-	json.NewEncoder(w).Encode(sessions)
+	respondWithData(w, "Success", sessions, 200)
 }
