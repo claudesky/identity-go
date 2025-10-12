@@ -5,6 +5,7 @@ import (
 
 	"github.com/claudesky/identity-go/interfaces/database"
 	"github.com/claudesky/identity-go/models"
+	"github.com/claudesky/identity-go/utils"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -20,23 +21,27 @@ func (r *UserRepository) GetUserById(
 	ctx context.Context,
 	id string,
 ) (
-	*models.User,
-	error,
+	user *models.User,
+	err error,
 ) {
+	if err = utils.ValidateUUID(id); err != nil {
+		return
+	}
+
 	query := `select * from users where id = @id`
 	args := pgx.NamedArgs{"id": id}
 
 	rows, err := r.db.Query(ctx, query, args)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.User])
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return &result, err
+	return &result, nil
 }
 
 func (r *UserRepository) GetUserByEmail(
