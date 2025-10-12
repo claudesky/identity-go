@@ -15,7 +15,7 @@ const name = ref('')
 const error = ref('')
 const loading = ref(false)
 
-const { setUser, register } = useAuth()
+const { register } = useAuth()
 const router = useRouter()
 
 const validateForm = (): boolean => {
@@ -52,7 +52,7 @@ const handleSubmit = async () => {
       email: email.value,
       password: password.value
     })
-
+    router.push('/') // temp
   } catch (err: any) {
     error.value = err.data?.message || err.message || 'Sign up failed'
   } finally {
