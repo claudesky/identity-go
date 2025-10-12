@@ -9,6 +9,8 @@ import (
 
 	"github.com/claudesky/identity-go/interfaces/repositories"
 	"github.com/claudesky/identity-go/models"
+	"github.com/claudesky/identity-go/requests"
+	"github.com/claudesky/identity-go/responses"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
 	"github.com/golang-jwt/jwt/v5"
@@ -34,14 +36,8 @@ func NewAuthController(
 func (c *AuthController) Login(
 	w http.ResponseWriter,
 	r *http.Request,
-	rq *LoginRequest,
+	rq *requests.Login,
 ) {
-	// Validation
-	if err := rq.validate(); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	// Get user
 	user, err := c.ur.GetUserByEmail(r.Context(), *rq.Email)
 	if err != nil {
@@ -103,7 +99,7 @@ func (c *AuthController) Login(
 		ExpiresAt:    expRT,
 	})
 
-	respondWithJSON(w, &TokenResponse{
+	respondWithData(w, "Success", &responses.TokenResponse{
 		AccessToken:  tokenString,
 		RefreshToken: refreshString,
 	}, http.StatusOK)
@@ -112,14 +108,8 @@ func (c *AuthController) Login(
 func (c *AuthController) Refresh(
 	w http.ResponseWriter,
 	r *http.Request,
-	rq *RefreshRequest,
+	rq *requests.Refresh,
 ) {
-	// Validation
-	if err := rq.validate(); err != nil {
-		respondWithError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	// Verify Token
 	ok, claims := c.th.VerifyRefreshToken(*rq.RefreshToken)
 	if !ok {
@@ -207,7 +197,7 @@ func (c *AuthController) Refresh(
 	c.tfr.UpdateToken(r.Context(), tf)
 
 	// Send new tokens
-	respondWithJSON(w, &TokenResponse{
+	respondWithData(w, "Success", &responses.TokenResponse{
 		AccessToken:  tokenString,
 		RefreshToken: refreshString,
 	}, http.StatusOK)
@@ -224,7 +214,7 @@ func (c *AuthController) Validate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		respondWithJSON(w, claims, http.StatusOK)
+		respondWithData(w, "Success", claims, http.StatusOK)
 	} else {
 		fmt.Println(err)
 		internalServerError(w)

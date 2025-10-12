@@ -7,6 +7,7 @@ import (
 
 	"github.com/claudesky/identity-go/interfaces/repositories"
 	"github.com/claudesky/identity-go/models"
+	"github.com/claudesky/identity-go/requests"
 	"github.com/claudesky/identity-go/services"
 	"github.com/claudesky/identity-go/utils"
 )
@@ -30,17 +31,11 @@ func NewRegisterController(
 func (c *RegisterController) Register(
 	w http.ResponseWriter,
 	r *http.Request,
-	rq *RegisterRequest,
+	rq *requests.Register,
 ) {
-	// Validation
-	if err := rq.validate(); err != nil {
-		respondWithError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	// Check existing user
 	if user, _ := c.ur.GetUserByEmail(r.Context(), *rq.Email); user != nil {
-		respondWithError(w, "User with email already exists", http.StatusConflict)
+		respondWithMessage(w, "User with email already exists", http.StatusConflict)
 		return
 	}
 
@@ -49,7 +44,7 @@ func (c *RegisterController) Register(
 		r.Context(),
 		*rq.Email,
 	); rr != nil {
-		respondWithError(
+		respondWithMessage(
 			w,
 			"Registration request with email already exists",
 			http.StatusConflict,
@@ -109,32 +104,26 @@ func (c *RegisterController) Register(
 		return
 	}
 
-	respondWithDataMessage(
+	respondWithData(
 		w,
 		"Registration Request received.",
-		http.StatusCreated,
 		&struct {
 			EmailVerificationRequest *models.EmailVerificationRequest `json:"email_verification_request"`
 		}{
 			EmailVerificationRequest: evr,
 		},
+		http.StatusCreated,
 	)
 }
 
 func (c *RegisterController) Resend(
 	w http.ResponseWriter,
 	r *http.Request,
-	rq *ResendVerificationRequest,
+	rq *requests.ResendVerification,
 ) {
-	// Validation
-	if err := rq.validate(); err != nil {
-		respondWithError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	// Check if user already exists
 	if user, _ := c.ur.GetUserByEmail(r.Context(), *rq.Email); user != nil {
-		respondWithError(w, "User with email already exists", http.StatusConflict)
+		respondWithMessage(w, "User with email already exists", http.StatusConflict)
 		return
 	}
 
@@ -152,40 +141,35 @@ func (c *RegisterController) Resend(
 		return
 	}
 
-	respondWithDataMessage(
+	respondWithData(
 		w,
 		"Verification email resent.",
-		http.StatusOK,
 		&struct {
 			EmailVerificationRequest *models.EmailVerificationRequest `json:"email_verification_request"`
 		}{
 			EmailVerificationRequest: evr,
 		},
+		http.StatusOK,
 	)
 }
 
 func (c *RegisterController) Verify(
 	w http.ResponseWriter,
 	r *http.Request,
-	rq *VerificationRequest,
+	rq *requests.Verification,
 ) {
-	// Validation
-	if err := rq.validate(); err != nil {
-		respondWithError(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	// Verify the token
 	msg, ok, err := c.evs.
 		VerifyEmailVerificationRequest(r.Context(), *rq.Id, *rq.Token)
 	if err != nil {
 		// insert better slog error logging here
+		slog.Error(err.Error())
 		internalServerError(w)
 		return
 	} else if !ok {
-		respondWithError(w, msg, http.StatusUnprocessableEntity)
+		respondWithMessage(w, msg, http.StatusUnprocessableEntity)
 		return
 	}
 
-	respondWithMessage(w, "verification success", http.StatusOK)
+	respondWithMessage(w, "Success", http.StatusOK)
 }

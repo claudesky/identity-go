@@ -16,6 +16,6 @@ func (c *HealthController) Check(w http.ResponseWriter, _ *http.Request) {
 	if c.healthy {
 		respondWithMessage(w, "OK", http.StatusOK)
 	} else {
-		respondWithError(w, "Service Unavailable", http.StatusServiceUnavailable)
+		respondWithMessage(w, "Service Unavailable", http.StatusServiceUnavailable)
 	}
 }

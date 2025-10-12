@@ -87,31 +87,32 @@ func (c *EmailVerification) VerifyEmailVerificationRequest(
 ) (msg string, ok bool, err error) {
 	ev, err := c.evr.GetEmailVerificationRequestById(ctx, id)
 	if err != nil {
+		msg = "Token not found"
 		return
 	}
 
 	// Check if invalid attempt was previously made
 	// and subsequently the verification request was revoked
 	if ev.Revoked {
-		msg = "token is revoked"
+		msg = "Token is revoked"
 		return
 	}
 
 	// Check if already accepted
 	if ev.Accepted {
-		msg = "token is already accepted"
+		msg = "Token is already accepted"
 		return
 	}
 
 	// Check if expired
 	if time.Now().After(ev.ExpiresAt) {
-		msg = "token is expired"
+		msg = "Token is expired"
 		return
 	}
 
 	// Check if token matches
 	if *ev.Token != token {
-		msg = "token did not match"
+		msg = "Token did not match"
 		// Revoke if not matching
 		c.evr.Revoke(ctx, ev)
 		return

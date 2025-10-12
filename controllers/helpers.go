@@ -1,55 +1,38 @@
 package controllers
 
 import (
-	"encoding/json"
-	"log/slog"
 	"net/http"
+
+	"github.com/claudesky/identity-go/responses"
 )
 
-// -- Response Generators
-
-func respondWithError(w http.ResponseWriter, message string, statusCode int) {
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(&ErrorMessage{
-		Error:  message,
-		Status: statusCode,
-	})
-}
-
-func respondWithJSON(w http.ResponseWriter, data interface{}, statusCode int) {
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
-}
-
 func respondWithMessage(w http.ResponseWriter, message string, statusCode int) {
-	respondWithJSON(w, &Message{Message: message, Status: statusCode}, statusCode)
-}
-
-func respondWithDataMessage(
-	w http.ResponseWriter,
-	message string,
-	statusCode int,
-	data any,
-) {
-	respondWithJSON(w, &DataMessage{
+	responses.Message{
 		Message: message,
 		Status:  statusCode,
+	}.Write(w)
+}
+
+func respondWithData(w http.ResponseWriter, message string, data any, statusCode int) {
+	responses.DataMessage{
+		Message: message,
 		Data:    data,
-	}, statusCode)
+		Status:  statusCode,
+	}.Write(w)
 }
 
 // -- Preset Responses
 
 func internalServerError(w http.ResponseWriter) {
-	respondWithError(w, "Internal Server Error", http.StatusInternalServerError)
+	responses.Message{
+		Status:  http.StatusInternalServerError,
+		Message: "Internal Server Error",
+	}.Write(w)
 }
 
 func unauthorized(w http.ResponseWriter) {
-	respondWithError(w, "Unauthorized", http.StatusUnauthorized)
-}
-
-// -- Logging Helpers
-
-func logError(logger slog.Logger, err error, message string, context ...string) {
-
+	responses.Message{
+		Status:  http.StatusUnauthorized,
+		Message: "Unauthorized",
+	}.Write(w)
 }
