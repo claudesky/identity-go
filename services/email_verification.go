@@ -100,7 +100,9 @@ func (c *EmailVerification) VerifyEmailVerificationRequest(
 
 	// Check if already accepted
 	if ev.Accepted {
-		msg = "Token is already accepted"
+		// no need to error out here, response should be OK and user should
+		// already be created
+		ok = true
 		return
 	}
 

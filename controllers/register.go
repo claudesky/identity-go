@@ -149,7 +149,7 @@ func (c *RegisterController) Resend(
 		}{
 			EmailVerificationRequest: evr,
 		},
-		http.StatusOK,
+		http.StatusCreated,
 	)
 }
 

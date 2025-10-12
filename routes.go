@@ -5,6 +5,7 @@ import (
 
 	"github.com/claudesky/identity-go/controllers"
 	"github.com/claudesky/identity-go/middleware"
+	"github.com/claudesky/identity-go/responses"
 	"github.com/claudesky/identity-go/services"
 )
 
@@ -52,6 +53,9 @@ func registerRoutes(
 
 	// Fallback Route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Not Found", http.StatusNotFound)
+		responses.Message{
+			Message: "Not Found",
+			Status:  http.StatusNotFound,
+		}.Write(w)
 	})
 }
