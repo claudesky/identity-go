@@ -6,11 +6,40 @@
   "configurations": [
 
     {
-      "name": "Launch Package",
+      "name": "api: go",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "."
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "client: chrome",
+      "url": "http://localhost:3000",
+      // this should point to your Nuxt `srcDir`, which is `app` by default
+      "webRoot": "${workspaceFolder}/frontend"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "server: nuxt",
+      "outputCapture": "std",
+      "program": "${workspaceFolder}/frontend/node_modules/nuxt/bin/nuxt.mjs",
+      "localRoot": "${workspaceFolder}/frontend",
+      "args": [
+        "dev"
+      ],
+    }
+  ],
+  "compounds": [
+    {
+      "name": "all",
+      "configurations": [
+        "api: go",
+        "server: nuxt",
+        "client: chrome",
+      ]
     }
   ]
 }
