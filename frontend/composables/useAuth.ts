@@ -20,7 +20,11 @@ export const useAuth = () => {
   const loadSelf = async () => {
     const response = await getSelf()
 
-    if (response.data.value === null) return false
+    if (
+      response === undefined ||
+      response.data.value === null ||
+      response.data.value === undefined
+    ) return false
 
     user.value = response.data.value.data
     return true

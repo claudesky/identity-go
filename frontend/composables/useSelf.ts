@@ -18,12 +18,10 @@ export const useSelf = () => {
     })
   }
 
-  const getSessions = async () => {
-    const response = await $fetch<DataResponse<Session[]>>('/api/self/sessions', {
+  const getSessions = () => {
+    return useFetch<DataResponse<Session[]>>('/api/self/sessions', {
       method: 'GET',
     })
-
-    return response
   }
 
   return {
