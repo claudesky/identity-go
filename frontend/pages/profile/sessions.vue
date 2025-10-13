@@ -12,29 +12,18 @@ useHead({
 
 const { getSessions } = useSelf()
 
-const sessions = ref<Session[]>([])
-const loading = ref(true)
-const error = ref('')
-
-const loadSessions = async () => {
-  loading.value = true
-  error.value = ''
-
-  try {
-    const data = (await getSessions()).data
-    sessions.value = data.sort((a, b) =>
+const { data: sessions, error, pending: loading, refresh } = await useAsyncData(
+  'user-sessions',
+  async () => {
+    const result = await getSessions()
+    if (result.data.value === undefined) {
+      throw result.error.value || new Error('Failed to load sessions')
+    }
+    return result.data.value.data.sort((a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
-  } catch (err: any) {
-    error.value = err.data?.message || err.message || 'Failed to load sessions'
-  } finally {
-    loading.value = false
   }
-}
-
-onMounted(() => {
-  loadSessions()
-})
+)
 
 const columnHelper = createColumnHelper<Session>()
 
@@ -63,7 +52,7 @@ const columns = [
 
 const table = useVueTable({
   get data() {
-    return sessions.value
+    return sessions.value || []
   },
   columns,
   getCoreRowModel: getCoreRowModel()
@@ -77,8 +66,8 @@ const table = useVueTable({
       <h1>Active Sessions</h1>
 
       <div v-if="loading" class="loading">Loading sessions...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="sessions.length === 0" class="empty">No active sessions found</div>
+      <div v-else-if="error" class="error">{{ error.message || error }}</div>
+      <div v-else-if="!sessions || sessions.length === 0" class="empty">No active sessions found</div>
 
       <table v-else class="sessions-table">
         <thead>
