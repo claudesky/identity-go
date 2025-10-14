@@ -16,8 +16,36 @@ create table register_requests (
 );
 
 create table audiences (
+    name text primary key
+);
+
+create table user_audience (
+    user_id uuid not null,
+    audience text not null,
+    primary key (user_id, audience),
+    foreign key (user_id) references users(id) on delete cascade,
+    foreign key (audience) references audiences(name) on delete cascade
+);
+
+create table scopes (
     id uuid primary key,
-    name text
+    audience text not null,
+    name text not null,
+    foreign key (audience) references audiences(name) on delete cascade,
+    unique (audience, name)
+);
+
+create table user_scope (
+    user_id uuid not null,
+    scope_id uuid not null,
+    primary key (user_id, scope_id),
+    foreign key (user_id) references users(id) on delete cascade,
+    foreign key (scope_id) references scopes(id) on delete cascade
+);
+
+create table apps (
+    id uuid primary key,
+    name text not null
 );
 
 create table token_families (
@@ -50,4 +78,20 @@ values (
     'admin@example.org',
     -- password is "password"
     '$2a$12$xrjwIS2d.hptiD/CEKKqxO5kVYjuWcWwxTNeXDT2bQJRlJweKGLu.'
-)
+);
+
+insert into audiences (name)
+values ('http://localhost:9102'); -- idg_app_url
+
+insert into scopes (id, audience, name)
+values (
+    '0615b123-1a98-405b-bc44-6d41ad6a193d',
+    'http://localhost:9102',
+    'read'
+);
+
+insert into user_scope (user_id, scope_id)
+values (
+    '0615b123-1a98-405b-bc44-6d41ad6a193c',
+    '0615b123-1a98-405b-bc44-6d41ad6a193d'
+);
