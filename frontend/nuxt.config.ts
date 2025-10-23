@@ -8,7 +8,10 @@ export default defineNuxtConfig({
     port: 3000
   },
 
-  css: ['~/assets/css/main.css'],
+  css: [
+    '~/assets/css/main.css',
+    '@fortawesome/fontawesome-svg-core/styles.css'
+  ],
 
   app: {
     head: {
@@ -22,5 +25,7 @@ export default defineNuxtConfig({
       apiBaseURL: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:9102',
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Identity - Go'
     }
-  }
+  },
+
+  modules: ['@nuxtjs/tailwindcss']
 })
