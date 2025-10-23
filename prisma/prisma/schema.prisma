@@ -13,6 +13,33 @@ model apps {
   name String
 }
 
+model authorization_codes {
+  id                    String   @id @db.Uuid
+  code                  String   @unique @db.Uuid
+  client_id             String   @db.Uuid
+  user_id               String   @db.Uuid
+  redirect_uri          String
+  scope                 String
+  expires_at            DateTime @db.Timestamp(6)
+  created_at            DateTime @db.Timestamp(6)
+  used                  Boolean  @default(false)
+  code_challenge        String?
+  code_challenge_method String?
+  clients               clients  @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: NoAction)
+  users                 users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model clients {
+  id                  String                @id @db.Uuid
+  client_id           String                @unique @db.Uuid
+  client_secret       String
+  name                String
+  redirect_uris       String[]
+  created_at          DateTime              @db.Timestamp(6)
+  updated_at          DateTime              @db.Timestamp(6)
+  authorization_codes authorization_codes[]
+}
+
 model audiences {
   name          String          @id
   scopes        scopes[]
@@ -78,13 +105,14 @@ model user_scope {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model users {
-  id                       String          @id @db.Uuid
+  id                       String                @id @db.Uuid
   password                 String?
   name                     String?
   email                    String?
-  email_verified_on        DateTime?       @db.Timestamp(6)
+  email_verified_on        DateTime?             @db.Timestamp(6)
   phone_number             String?
-  phone_number_verified_on DateTime?       @db.Timestamp(6)
+  phone_number_verified_on DateTime?             @db.Timestamp(6)
+  authorization_codes      authorization_codes[]
   user_audience            user_audience[]
   user_scope               user_scope[]
 }

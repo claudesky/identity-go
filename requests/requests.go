@@ -30,6 +30,16 @@ type ResendVerification struct {
 	Email *string `json:"email"`
 }
 
+type CreateClient struct {
+	Name         *string   `json:"name"`
+	RedirectUris *[]string `json:"redirect_uris"`
+}
+
+type UpdateClient struct {
+	Name         *string   `json:"name"`
+	RedirectUris *[]string `json:"redirect_uris"`
+}
+
 // -- Validators
 
 func (rq *Login) Validate() error {
@@ -78,6 +88,26 @@ func (rq *ResendVerification) Validate() error {
 	}
 	if _, err := mail.ParseAddress(*rq.Email); err != nil {
 		return errors.New("[email] must be a valid email address")
+	}
+	return nil
+}
+
+func (rq *CreateClient) Validate() error {
+	if rq.Name == nil || *rq.Name == "" {
+		return errors.New("[name] is required")
+	}
+	if rq.RedirectUris == nil || len(*rq.RedirectUris) == 0 {
+		return errors.New("[redirect_uris] must contain at least one URI")
+	}
+	return nil
+}
+
+func (rq *UpdateClient) Validate() error {
+	if rq.Name == nil || *rq.Name == "" {
+		return errors.New("[name] is required")
+	}
+	if rq.RedirectUris == nil || len(*rq.RedirectUris) == 0 {
+		return errors.New("[redirect_uris] must contain at least one URI")
 	}
 	return nil
 }

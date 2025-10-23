@@ -16,6 +16,7 @@ func registerRoutes(
 	authController *controllers.AuthController,
 	selfController *controllers.SelfController,
 	userController *controllers.UserController,
+	clientController *controllers.ClientController,
 	tokenHandler *services.TokenHandler,
 ) {
 	// Health routes
@@ -51,7 +52,12 @@ func registerRoutes(
 		Route("GET /users/{id}", userController.Show).
 		Route("GET /self/sessions", selfController.Sessions).
 		Route("GET /self", selfController.Self).
-		Route("GET /auth/validate", authController.Validate)
+		Route("GET /auth/validate", authController.Validate).
+		Route("GET /clients", clientController.Index).
+		Route("GET /clients/{id}", clientController.Show).
+		Route("POST /clients", middleware.JSONDecoderMiddleware(clientController.Create)).
+		Route("PUT /clients/{id}", middleware.JSONDecoderMiddleware(clientController.Update)).
+		Route("DELETE /clients/{id}", clientController.Delete)
 
 	protected.Handle(mux)
 

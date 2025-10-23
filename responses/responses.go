@@ -32,3 +32,13 @@ type DataMessage struct {
 func (r DataMessage) Write(w http.ResponseWriter) {
 	r.BaseResponse.Write(w, r)
 }
+
+type ClientCreatedResponse struct {
+	BaseResponse
+	Client       interface{} `json:"client"`
+	ClientSecret string      `json:"client_secret"`
+}
+
+func (r ClientCreatedResponse) Write(w http.ResponseWriter) {
+	r.BaseResponse.Write(w, r)
+}
