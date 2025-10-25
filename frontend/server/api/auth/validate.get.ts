@@ -1,7 +1,5 @@
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
-  let accessToken;
+  let accessToken
 
   const authHeader = getHeader(event, 'authorization')
   if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -11,23 +9,20 @@ export default defineEventHandler(async (event) => {
   if (!accessToken) {
     throw createError({
       statusCode: 401,
-      message: 'No access token found'
+      message: 'No access token found',
     })
   }
 
   try {
-    const response = await $fetch(`${config.public.apiBaseURL}/auth/validate`, {
+    const response = await event.context.fetchWithAuth('/auth/validate', {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
     })
 
     return response
   } catch (error: any) {
     throw createError({
       statusCode: error.response?.status || 500,
-      message: error.data?.message || 'Validation failed'
+      message: error.data?.message || 'Validation failed',
     })
   }
 })

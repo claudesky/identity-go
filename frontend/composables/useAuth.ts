@@ -1,4 +1,5 @@
 import type { SignUpRequest, SignInRequest } from '../lib/request'
+import { attemptRefreshToken } from '../server/utils/refreshToken'
 import { useSelf } from './useSelf'
 
 export interface User {
@@ -10,7 +11,7 @@ export interface User {
 
 export const useAuth = () => {
   const user = useState<User | null>('user', () => null)
-  const { accessToken, clearTokens } = useTokens()
+  const { accessToken, refreshToken, clearTokens } = useTokens()
   const { getSelf } = useSelf()
 
   const setUser = (userData: User | null) => {
@@ -31,9 +32,20 @@ export const useAuth = () => {
   }
 
   const validateToken = async (): Promise<boolean> => {
-    if (!accessToken.value) {
+    if (!accessToken.value && !refreshToken.value) {
       user.value = null
       return false
+    } else if (!accessToken.value && refreshToken.value && import.meta.server) {
+      try {
+        let tokenData = await attemptRefreshToken(refreshToken.value)
+        accessToken.value = tokenData.access_token
+        refreshToken.value = tokenData.refresh_token
+        return loadSelf()
+      } catch (error) {
+        user.value = null
+        clearTokens()
+        return false
+      }
     }
 
     return loadSelf()

@@ -1,10 +1,7 @@
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event): Promise<any> => {
-  const config = useRuntimeConfig()
-
-  // Get the access token from cookie or Authorization header
-  let accessToken = getCookie(event, 'identity_access_token')
+  const accessToken = getCookie(event, 'identity_access_token')
 
   if (!accessToken) {
     throw createError({
@@ -14,14 +11,9 @@ export default defineEventHandler(async (event): Promise<any> => {
   }
 
   try {
-    const response = await $fetch<DataResponse<any[]>>(
-      `${config.public.apiBaseURL}/self/sessions`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+    const response = await event.context.fetchWithAuth<DataResponse<any[]>>(
+      '/self/sessions',
+      { method: 'GET' }
     )
 
     return response

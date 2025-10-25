@@ -1,4 +1,5 @@
 import type { DataResponse, TokenData } from "../../../lib/response"
+import { setTokensFromData } from "../../utils/refreshToken"
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -13,19 +14,7 @@ export default defineEventHandler(async (event) => {
       }
     )
 
-    setCookie(event, 'identity_access_token', response.data.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 15, // 15 minutes
-    })
-
-    setCookie(event, 'identity_refresh_token', response.data.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    })
+    setTokensFromData(event, response.data)
 
     // Return success without exposing tokens
     return

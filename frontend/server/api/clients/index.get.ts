@@ -2,8 +2,6 @@ import type { Client } from '../../../composables/useClients'
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
   const accessToken = getCookie(event, 'identity_access_token')
 
   if (!accessToken) {
@@ -14,14 +12,9 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const response = await $fetch<DataResponse<Client[]>>(
-      `${config.public.apiBaseURL}/clients`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+    const response = await event.context.fetchWithAuth<DataResponse<Client[]>>(
+      '/clients',
+      { method: 'GET' }
     )
 
     return response

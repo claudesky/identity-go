@@ -1,9 +1,10 @@
-import type { Client, UpdateClientRequest } from '../../../composables/useClients'
+import type {
+  Client,
+  UpdateClientRequest,
+} from '../../../composables/useClients'
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
   const accessToken = getCookie(event, 'identity_access_token')
 
   if (!accessToken) {
@@ -25,15 +26,9 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<UpdateClientRequest>(event)
 
   try {
-    const response = await $fetch<DataResponse<Client>>(
-      `${config.public.apiBaseURL}/clients/${id}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body,
-      }
+    const response = await event.context.fetchWithAuth<DataResponse<Client>>(
+      `/clients/${id}`,
+      { method: 'PUT', body }
     )
 
     return response

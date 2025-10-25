@@ -1,8 +1,6 @@
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
   const accessToken = getCookie(event, 'identity_access_token')
 
   if (!accessToken) {
@@ -22,14 +20,9 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const response = await $fetch<DataResponse<void>>(
-      `${config.public.apiBaseURL}/clients/${id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+    const response = await event.context.fetchWithAuth<DataResponse<void>>(
+      `/clients/${id}`,
+      { method: 'DELETE' }
     )
 
     return response

@@ -1,9 +1,10 @@
-import type { CreateClientRequest, CreateClientResponse } from '../../../composables/useClients'
+import type {
+  CreateClientRequest,
+  CreateClientResponse,
+} from '../../../composables/useClients'
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
   const accessToken = getCookie(event, 'identity_access_token')
 
   if (!accessToken) {
@@ -16,16 +17,9 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<CreateClientRequest>(event)
 
   try {
-    const response = await $fetch<DataResponse<CreateClientResponse>>(
-      `${config.public.apiBaseURL}/clients`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body,
-      }
-    )
+    const response = await event.context.fetchWithAuth<
+      DataResponse<CreateClientResponse>
+    >('/clients', { method: 'POST', body })
 
     return response
   } catch (error: any) {
