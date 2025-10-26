@@ -1,8 +1,8 @@
 import type {
   CreateClientRequest,
   CreateClientResponse,
-} from '../../../app/composables/useClients'
-import type { DataResponse } from '../../../lib/response'
+  DataResponse,
+} from '../../../shared/types'
 
 export default defineEventHandler(async (event) => {
   const accessToken = getCookie(event, 'identity_access_token')

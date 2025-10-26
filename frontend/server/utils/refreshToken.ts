@@ -1,5 +1,4 @@
 import type { H3Event } from 'h3'
-import type { DataResponse, TokenData } from '../../lib/response'
 
 /**
  * Attempt to refresh access token using refresh token from cookies
@@ -34,18 +33,6 @@ export async function attemptTokenRefresh(event: H3Event): Promise<boolean> {
     deleteCookie(event, 'identity_refresh_token')
     return false
   }
-}
-
-export async function attemptRefreshToken(refreshToken: string) {
-  const config = useRuntimeConfig()
-  const response = await $fetch<DataResponse<TokenData>>(
-    `${config.public.apiBaseURL}/auth/refresh`,
-    {
-      method: 'POST',
-      body: { refresh_token: refreshToken },
-    }
-  )
-  return response.data
 }
 
 export function setTokensFromData(event: H3Event, data: TokenData) {

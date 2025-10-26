@@ -1,4 +1,4 @@
-import type { DataResponse } from '../../../lib/response'
+import type { DataResponse } from '../../../shared/types'
 
 export default defineEventHandler(async (event) => {
   const accessToken = getCookie(event, 'identity_access_token')

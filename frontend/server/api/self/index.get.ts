@@ -1,5 +1,4 @@
-import type { User } from '../../../app/composables/useAuth'
-import type { DataResponse } from '../../../lib/response'
+import type { User, DataResponse } from '../../../shared/types'
 
 export default defineEventHandler(async (event) => {
   const accessToken = getCookie(event, 'identity_access_token')

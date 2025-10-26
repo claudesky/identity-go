@@ -1,8 +1,5 @@
-/**
- * Server middleware to handle token refresh on 401 responses
- * Note: This middleware provides a helper but the actual retry logic
- * needs to be implemented per endpoint or using a fetch wrapper
- */
+import { H3Event } from 'h3'
+
 export default defineEventHandler((event) => {
   // Skip interception for auth endpoints
   const path = event.path
@@ -34,7 +31,7 @@ export default defineEventHandler((event) => {
   }
 })
 
-function apiFetch<T>(event: any, url: string, options: any) {
+export function apiFetch<T>(event: H3Event, url: string, options: any) {
   const config = useRuntimeConfig()
   const accessToken = getCookie(event, 'identity_access_token')
   return $fetch<T>(`${config.public.apiBaseURL}${url}`, {

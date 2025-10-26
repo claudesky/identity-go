@@ -1,14 +1,3 @@
-import type { SignUpRequest, SignInRequest } from '../../lib/request'
-import { attemptRefreshToken } from '../../server/utils/refreshToken'
-import { useSelf } from './useSelf'
-
-export interface User {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-}
-
 export const useAuth = () => {
   const user = useState<User | null>('user', () => null)
   const { accessToken, refreshToken, clearTokens } = useTokens()

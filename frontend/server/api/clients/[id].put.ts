@@ -1,8 +1,5 @@
-import type {
-  Client,
-  UpdateClientRequest,
-} from '../../../app/composables/useClients'
-import type { DataResponse } from '../../../lib/response'
+
+import type { Client, UpdateClientRequest, DataResponse } from '../../../shared/types'
 
 export default defineEventHandler(async (event) => {
   const accessToken = getCookie(event, 'identity_access_token')

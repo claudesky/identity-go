@@ -1,4 +1,3 @@
-import type { DataResponse, TokenData } from "../../../lib/response"
 import { setTokensFromData } from "../../utils/refreshToken"
 
 export default defineEventHandler(async (event) => {
