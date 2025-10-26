@@ -1,4 +1,4 @@
-import type { User } from '../../../composables/useAuth'
+import type { User } from '../../../app/composables/useAuth'
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {

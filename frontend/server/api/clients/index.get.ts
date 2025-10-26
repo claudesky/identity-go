@@ -1,4 +1,4 @@
-import type { Client } from '../../../composables/useClients'
+import type { Client } from '../../../app/composables/useClients'
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {

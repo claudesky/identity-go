@@ -1,4 +1,4 @@
-import type { DataResponse } from '../lib/response'
+import type { DataResponse } from '../../lib/response'
 import type { User } from './useAuth'
 
 export interface Session {

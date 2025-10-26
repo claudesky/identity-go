@@ -1,7 +1,7 @@
 import type {
   CreateClientRequest,
   CreateClientResponse,
-} from '../../../composables/useClients'
+} from '../../../app/composables/useClients'
 import type { DataResponse } from '../../../lib/response'
 
 export default defineEventHandler(async (event) => {
