@@ -1,12 +1,13 @@
 import { H3Event } from 'h3'
 
 export default defineEventHandler((event) => {
-  // Skip interception for auth endpoints
+  // Skip interception for auth and non-api endpoints
   const path = event.path
   if (
-    path.includes('/api/auth/login') ||
-    path.includes('/api/auth/register') ||
-    path.includes('/api/auth/refresh')
+    !path.startsWith('/api') ||
+    path.startsWith('/api/auth/login') ||
+    path.startsWith('/api/auth/register') ||
+    path.startsWith('/api/auth/refresh')
   ) {
     return
   }
