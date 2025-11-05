@@ -1,31 +1,11 @@
-import type {
-  CreateClientRequest,
-  CreateClientResponse,
-  DataResponse,
-} from '../../../shared/types'
-
 export default defineEventHandler(async (event) => {
-  const accessToken = getCookie(event, 'identity_access_token')
-
-  if (!accessToken) {
-    throw createError({
-      statusCode: 401,
-      message: 'No access token found',
-    })
-  }
-
   const body = await readBody<CreateClientRequest>(event)
 
-  try {
-    const response = await event.context.fetchWithAuth<
-      DataResponse<CreateClientResponse>
-    >('/clients', { method: 'POST', body })
-
-    return response
-  } catch (error: any) {
-    throw createError({
-      statusCode: error.response?.status || 500,
-      message: error.data?.message || 'Failed to create client',
-    })
-  }
+  return createIdentityApiFetch(event)<DataResponse<CreateClientResponse>>(
+    '/clients',
+    {
+      method: 'POST',
+      body,
+    }
+  )
 })

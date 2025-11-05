@@ -1,14 +1,13 @@
 export const useSelf = () => {
-  const getSelf = () => {
-    return useFetch<DataResponse<User>>('/api/self', {
-      method: 'GET',
-    })
+  const { $identityApi } = useNuxtApp()
+  const getSelf = async () => {
+    return useAsyncData<DataResponse<User>>(() => $identityApi('/api/self'))
   }
 
   const getSessions = () => {
-    return useFetch<DataResponse<Session[]>>('/api/self/sessions', {
-      method: 'GET',
-    })
+    return useAsyncData<DataResponse<User>>(() =>
+      $identityApi('/api/self/sessions')
+    )
   }
 
   return {

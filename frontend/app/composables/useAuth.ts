@@ -14,9 +14,10 @@ export const useAuth = () => {
       response === undefined ||
       response.data.value === null ||
       response.data.value === undefined
-    ) return false
+    )
+      return false
 
-    user.value = response.data.value.data
+    setUser(response.data.value.data)
     return true
   }
 
@@ -24,17 +25,6 @@ export const useAuth = () => {
     if (!accessToken.value && !refreshToken.value) {
       user.value = null
       return false
-    } else if (!accessToken.value && refreshToken.value && import.meta.server) {
-      try {
-        let tokenData = await attemptRefreshToken(refreshToken.value)
-        accessToken.value = tokenData.access_token
-        refreshToken.value = tokenData.refresh_token
-        return loadSelf()
-      } catch (error) {
-        user.value = null
-        clearTokens()
-        return false
-      }
     }
 
     return loadSelf()

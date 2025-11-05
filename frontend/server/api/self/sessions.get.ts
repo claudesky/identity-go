@@ -1,26 +1,3 @@
-import type { DataResponse } from '../../../shared/types'
-
 export default defineEventHandler(async (event): Promise<any> => {
-  const accessToken = getCookie(event, 'identity_access_token')
-
-  if (!accessToken) {
-    throw createError({
-      statusCode: 401,
-      message: 'Unauthorized',
-    })
-  }
-
-  try {
-    const response = await event.context.fetchWithAuth<DataResponse<any[]>>(
-      '/self/sessions',
-      { method: 'GET' }
-    )
-
-    return response
-  } catch (error: any) {
-    throw createError({
-      statusCode: error.response?.status || 500,
-      message: error.data?.message || 'Failed to fetch sessions',
-    })
-  }
+  return createIdentityApiFetch(event)('/self/sessions')
 })

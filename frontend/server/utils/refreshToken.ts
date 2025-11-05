@@ -36,6 +36,10 @@ export async function attemptTokenRefresh(event: H3Event): Promise<boolean> {
 }
 
 export function setTokensFromData(event: H3Event, data: TokenData) {
+  // setting in context for subsequent requests with same event
+  event.context.accessToken = data.access_token
+  event.context.refreshToken = data.refresh_token
+
   setCookie(event, 'identity_access_token', data.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
