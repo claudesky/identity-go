@@ -1,3 +1,7 @@
+import type { TokenData } from "../../shared/types/auth"
+import type { DataResponse } from "../../shared/types/response"
+import { useRuntimeConfig } from "nuxt/app"
+
 export async function attemptRefreshToken(refreshToken: string) {
   const config = useRuntimeConfig()
   const response = await $fetch<DataResponse<TokenData>>(
