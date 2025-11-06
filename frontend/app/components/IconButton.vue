@@ -29,6 +29,8 @@ defineEmits<{
 </script>
 
 <style scoped>
+@reference "tailwindcss";
+
 .icon-button {
   @apply rounded-md p-2.5 text-center text-sm transition-all;
   @apply disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none;
