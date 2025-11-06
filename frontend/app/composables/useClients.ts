@@ -2,7 +2,7 @@ export const useClients = () => {
   const { $identityApi } = useNuxtApp()
 
   const getClients = () => {
-    return useAsyncData<DataResponse<Client>>(() =>
+    return useAsyncData<DataResponse<Client[]>>(() =>
       $identityApi('/api/clients')
     )
   }
