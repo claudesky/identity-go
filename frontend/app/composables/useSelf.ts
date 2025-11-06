@@ -1,5 +1,6 @@
 export const useSelf = () => {
   const { $identityApi } = useNuxtApp()
+
   const getSelf = async () => {
     return useAsyncData<DataResponse<User>>(() => $identityApi('/api/self'))
   }

@@ -1,14 +1,16 @@
 export const useClients = () => {
+  const { $identityApi } = useNuxtApp()
+
   const getClients = () => {
-    return useFetch<DataResponse<Client[]>>('/api/clients', {
-      method: 'GET',
-    })
+    return useAsyncData<DataResponse<Client>>(() =>
+      $identityApi('/api/clients')
+    )
   }
 
   const getClient = (id: string) => {
-    return useFetch<DataResponse<Client>>(`/api/clients/${id}`, {
-      method: 'GET',
-    })
+    return useAsyncData<DataResponse<Client>>(() =>
+      $identityApi(`/api/clients/${id}`)
+    )
   }
 
   const createClient = (data: CreateClientRequest) => {
