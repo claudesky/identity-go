@@ -33,6 +33,16 @@ func (r DataMessage) Write(w http.ResponseWriter) {
 	r.BaseResponse.Write(w, r)
 }
 
+type AuthorizationCodeResponse struct {
+	BaseResponse
+	Code  string `json:"code"`
+	State string `json:"state,omitempty"`
+}
+
+func (r AuthorizationCodeResponse) Write(w http.ResponseWriter) {
+	r.BaseResponse.Write(w, r)
+}
+
 type ClientCreatedResponse struct {
 	BaseResponse
 	Client       interface{} `json:"client"`

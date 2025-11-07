@@ -39,6 +39,7 @@ func main() {
 	registerRequestRepository := postgres.NewRegisterRequestRepository(db)
 	emailVerificationRepository := postgres.NewEmailVerificationRepository(db)
 	clientRepository := postgres.NewClientRepository(db)
+	authorizationCodeRepository := postgres.NewAuthorizationCodeRepository(db)
 
 	// Init Services
 	tokenHandler := services.NewTokenHandler(idg_pkey, idg_pubkey)
@@ -71,6 +72,8 @@ func main() {
 		tokenHandler,
 		userRepository,
 		tokenFamilyRepository,
+		clientRepository,
+		authorizationCodeRepository,
 	)
 
 	selfController := controllers.NewSelfController(
