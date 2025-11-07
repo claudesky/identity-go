@@ -8,7 +8,6 @@ import (
 
 type ClientRepository interface {
 	GetClientById(ctx context.Context, id string) (*models.Client, error)
-	GetClientByClientId(ctx context.Context, clientId string) (*models.Client, error)
 	GetAllClients(ctx context.Context) ([]*models.Client, error)
 	InsertClient(ctx context.Context, m *models.Client) error
 	UpdateClient(ctx context.Context, m *models.Client) error

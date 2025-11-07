@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useClients, type Client } from '~/composables/useClients'
 import { useVueTable, getCoreRowModel, createColumnHelper, FlexRender } from '@tanstack/vue-table'
 
 definePageMeta({
@@ -30,14 +29,14 @@ const { data: clients, error, pending: loading, refresh } = await useAsyncData(
   }
 )
 
-const columnHelper = createColumnHelper<Client>()
+const columnHelper = createColumnHelper<ClientModel>()
 
 const columns = [
   columnHelper.accessor('name', {
     header: 'Name',
     cell: info => info.getValue()
   }),
-  columnHelper.accessor('client_id', {
+  columnHelper.accessor('id', {
     header: 'Client ID',
     cell: info => info.getValue()
   }),

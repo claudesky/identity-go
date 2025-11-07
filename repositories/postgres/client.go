@@ -44,33 +44,6 @@ func (r *ClientRepository) GetClientById(
 	return &result, nil
 }
 
-func (r *ClientRepository) GetClientByClientId(
-	ctx context.Context,
-	clientId string,
-) (
-	*models.Client,
-	error,
-) {
-	if err := utils.ValidateUUID(clientId); err != nil {
-		return nil, err
-	}
-
-	query := `select * from clients where client_id = @client_id`
-	args := pgx.NamedArgs{"client_id": clientId}
-
-	rows, err := r.db.Query(ctx, query, args)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[models.Client])
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
-}
-
 func (r *ClientRepository) InsertClient(
 	ctx context.Context,
 	m *models.Client,
@@ -82,7 +55,6 @@ func (r *ClientRepository) InsertClient(
 	)`
 	args := pgx.NamedArgs{
 		"id":            m.Id,
-		"client_id":     m.ClientId,
 		"client_secret": m.ClientSecret,
 		"name":          m.Name,
 		"redirect_uris": m.RedirectUris,

@@ -28,7 +28,7 @@ func NewClientController(
 func (c *ClientController) Index(w http.ResponseWriter, r *http.Request) {
 	clients, err := c.cr.GetAllClients(r.Context())
 	if err != nil {
-		slog.Warn("failed to get all clients", "error", err)
+		slog.Error("failed to get all clients", "error", err)
 		internalServerError(w)
 		return
 	}

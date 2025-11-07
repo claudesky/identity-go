@@ -2,13 +2,13 @@ export const useClients = () => {
   const { $identityApi } = useNuxtApp()
 
   const getClients = () => {
-    return useAsyncData<DataResponse<Client[]>>(() =>
+    return useAsyncData<DataResponse<ClientModel[]>>(() =>
       $identityApi('/api/clients')
     )
   }
 
   const getClient = (id: string) => {
-    return useAsyncData<DataResponse<Client>>(() =>
+    return useAsyncData<DataResponse<ClientModel>>(() =>
       $identityApi(`/api/clients/${id}`)
     )
   }
@@ -21,7 +21,7 @@ export const useClients = () => {
   }
 
   const updateClient = (id: string, data: UpdateClientRequest) => {
-    return useFetch<DataResponse<Client>>(`/api/clients/${id}`, {
+    return useFetch<DataResponse<ClientModel>>(`/api/clients/${id}`, {
       method: 'PUT',
       body: data,
     })

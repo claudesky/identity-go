@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useClients, type UpdateClientRequest } from '~/composables/useClients'
-
 definePageMeta({
   middleware: 'auth'
 })
@@ -109,8 +107,8 @@ const copyToClipboard = (text: string) => {
           <div class="info-item">
             <label>Client ID</label>
             <div class="copy-field">
-              <code>{{ client?.client_id }}</code>
-              <button type="button" class="btn-copy" @click="copyToClipboard(client?.client_id || '')">
+              <code>{{ client?.id }}</code>
+              <button type="button" class="btn-copy" @click="copyToClipboard(client?.id || '')">
                 Copy
               </button>
             </div>

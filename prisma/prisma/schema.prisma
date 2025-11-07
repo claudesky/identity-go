@@ -25,13 +25,12 @@ model authorization_codes {
   used                  Boolean  @default(false)
   code_challenge        String?
   code_challenge_method String?
-  clients               clients  @relation(fields: [client_id], references: [client_id], onDelete: Cascade, onUpdate: NoAction)
+  clients               clients  @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users                 users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model clients {
   id                  String                @id @db.Uuid
-  client_id           String                @unique @db.Uuid
   client_secret       String
   name                String
   redirect_uris       String[]

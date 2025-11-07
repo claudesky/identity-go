@@ -1,6 +1,5 @@
-export interface Client {
+export interface ClientModel {
   id: string
-  client_id: string
   name: string
   redirect_uris: string[]
   created_at: string
@@ -18,6 +17,6 @@ export interface UpdateClientRequest {
 }
 
 export interface CreateClientResponse {
-  client: Client
+  client: ClientModel
   client_secret: string
 }
